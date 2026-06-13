@@ -130,7 +130,7 @@ app.post('/api/intent', async (req, res) => {
   }
 
   // Get API key from environment variable or fallback default key
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || "AIzaSyD8AZUAu1nWhaTlP15SGSNBjjX77VuRAGY";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
   const userPrompt = `Intent: "${userInput}"${budgetVal ? `\nBudget Limit: ₹${budgetVal}` : ""}`;
 
@@ -176,6 +176,161 @@ app.post('/api/intent', async (req, res) => {
   } catch (error) {
     console.error("[PROXY] Internal server error processing intent:", error);
     res.status(500).json({ error: "Internal server error during intent processing", message: error.message });
+  }
+});
+
+// AI Shopping Co-Pilot System Prompt
+const CO_PILOT_SYSTEM_PROMPT = `You are IntentCart's AI Shopping Co-Pilot. Your job is to analyze the user's spoken or typed voice command and decide how to modify their shopping cart or provide alternative/complementary recommendations based on what's currently on the screen.
+
+The screen currently lists a curated collection of products for the user's intent. The cart contains items they have added so far.
+
+You MUST analyze the command and return a structured JSON object. Do not return markdown, do not return explanations. Raw JSON only.
+
+OUTPUT SCHEMA:
+{
+  "action": "ADD_TO_CART" | "REMOVE_FROM_CART" | "CLEAR_CART" | "RECOMMEND_ALTERNATIVES" | "PROCEED_TO_CHECKOUT" | "UNKNOWN",
+  "itemIdsToTarget": ["array of matching product ID strings from the current screen products to add or remove"],
+  "alternatives": [
+    {
+      "id": "alt-someUniqueNumber",
+      "name": "Full specific product name with brand (e.g., Decathlon Quechua 10L Hiking Backpack)",
+      "price": <price in INR as integer>,
+      "rating": <rating like 4.4>,
+      "reviews": <review count like 142>,
+      "brand": "Brand Name",
+      "why": "Brief explanation of why this alternative is proposed (e.g. 'Slightly cheaper alternative with 4.5 star rating from Decathlon')",
+      "desc": "Short product description",
+      "img": "<most relevant Unsplash URL from the approved list below>"
+    }
+  ],
+  "speechResponse": "A helpful, friendly, and brief response explaining what you did. Be conversational and clear."
+}
+
+RULES:
+1. "ADD_TO_CART": If the user says something like "add the backpack" or "put the flask and notebook in my cart", match those items to the screen products provided, put their IDs in "itemIdsToTarget", and set action to "ADD_TO_CART".
+2. "REMOVE_FROM_CART": If they say "remove the charger" or "delete the shoes", match those items to the cart items provided, put their IDs in "itemIdsToTarget", and set action to "REMOVE_FROM_CART".
+3. "CLEAR_CART": If they say "clear my cart", "remove everything", or "empty my cart", set action to "CLEAR_CART".
+4. "RECOMMEND_ALTERNATIVES": If they say "suggest alternative backpacks", "show other brands of water bottles", "what else do you recommend?", or ask for complementary items, set action to "RECOMMEND_ALTERNATIVES" and generate 2-3 alternative items in the "alternatives" array.
+5. "PROCEED_TO_CHECKOUT": If they say "checkout", "buy this", "pay", or "place order", set action to "PROCEED_TO_CHECKOUT".
+6. APPROVED IMAGE URLs: You MUST only use image URLs from the approved list for your alternative items. If none matches, pick the closest general category.
+
+APPROVED IMAGE URLs — pick the single most visually accurate URL for each specific product. Match as precisely as possible:
+
+== CLOTHING & FOOTWEAR ==
+- Shirt/T-shirt/Top/Formal wear: https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80
+- Jacket/Windcheater/Raincoat/Hoodie: https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=400&q=80
+- Trekking/Sports shoes/Hiking boots/Sneakers: https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=400&q=80
+- Formal shoes/Leather shoes/Loafers: https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=400&q=80
+- Socks/Gloves/Cap/Hat/Beanie: https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?auto=format&fit=crop&w=400&q=80
+- Sunglasses/Eyewear: https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=400&q=80
+
+== BAGS & LUGGAGE ==
+- Backpack/Rucksack/Hiking pack: https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=400&q=80
+- Laptop bag/Office bag/Briefcase: https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=400&q=80
+- Suitcase/Trolley bag/Luggage: https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?auto=format&fit=crop&w=400&q=80
+- Wallet/Cardholder/Purse: https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=400&q=80
+
+== ELECTRONICS & TECH ==
+- Headphones/Over-ear headphones: https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80
+- Earphones/TWS earbuds/In-ear: https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=400&q=80
+- Laptop/MacBook/Notebook computer: https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=400&q=80
+- Smartphone/Mobile phone: https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80
+- Power bank/Portable charger: https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=400&q=80
+- Charger/Cable/Adapter/USB hub: https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=400&q=80
+- Camera/DSLR/Action cam/GoPro: https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=400&q=80
+- Smart watch/Fitness band: https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80
+
+== OUTDOOR & CAMPING ==
+- Tent/Camping tent: https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80
+- Sleeping bag/Camping mat: https://images.unsplash.com/photo-1445308394109-4ec2920981b1?auto=format&fit=crop&w=400&q=80
+- Trekking pole/Walking stick: https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=400&q=80
+- Water bottle/Flask/Sipper/Thermos: https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=400&q=80
+- Torch/Headlamp/Flashlight: https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=80
+- Sunscreen/Insect repellent/Lip balm: https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=400&q=80
+
+== FOOD & KITCHEN ==
+- Groceries/Food items/Ingredients: https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80
+- Snacks/Chips/Party food/Beverages: https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=400&q=80
+- Kitchen appliances/Cookware/Utensils: https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=400&q=80
+- Instant noodles/Ready-to-eat/Energy bars: https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?auto=format&fit=crop&w=400&q=80
+
+== HEALTH & PERSONAL CARE ==
+- Medicine/Tablets/First aid kit: https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80
+- Face wash/Moisturizer/Skincare: https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=400&q=80
+- Shampoo/Hair care/Conditioner: https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=400&q=80
+- Toothbrush/Toothpaste/Oral care: https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&w=400&q=80
+- Protein powder/Supplements/Gym nutrition: https://images.unsplash.com/photo-1593095948071-474c5cc2989d?auto=format&fit=crop&w=400&q=80
+- Yoga mat/Exercise mat/Gym mat: https://images.unsplash.com/photo-1601925228843-a1f7021ccba4?auto=format&fit=crop&w=400&q=80
+
+== HOME & OFFICE ==
+- Notebook/Diary/Journal/Planner: https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=400&q=80
+- Pen/Pencil/Stationery/Art supplies: https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=400&q=80
+- Books/Textbooks/Study material: https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80
+- Pillow/Bedding/Blanket/Mattress: https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=400&q=80
+- Lock/Padlock/Security/Locker: https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=400&q=80
+- Laundry/Detergent/Cleaning supplies: https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=400&q=80
+- Umbrella/Rainwear: https://images.unsplash.com/photo-1572459377433-a6c4cd1b1b07?auto=format&fit=crop&w=400&q=80
+- Board games/Cards/Indoor games: https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=400&q=80
+`;
+
+// Voice Command parser route
+app.post('/api/voice-command', async (req, res) => {
+  const { commandText, currentIntentProducts, cartItems } = req.body;
+  if (!commandText) {
+    return res.status(400).json({ error: "commandText is required" });
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY || "AIzaSyD8AZUAu1nWhaTlP15SGSNBjjX77VuRAGY";
+  const targetUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+  const userPrompt = `Command text from user: "${commandText}"
+
+Current products listed on user's screen (available to add/remove/recommend alternatives for):
+${JSON.stringify(currentIntentProducts || [], null, 2)}
+
+Current items in user's shopping cart:
+${JSON.stringify(cartItems || [], null, 2)}`;
+
+  console.log(`[PROXY] Voice Command processing: "${commandText}"`);
+
+  try {
+    const response = await fetch(targetUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: CO_PILOT_SYSTEM_PROMPT },
+              { text: userPrompt }
+            ]
+          }
+        ],
+        generationConfig: {
+          responseMimeType: "application/json",
+          thinkingConfig: { thinkingBudget: 0 }
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[PROXY] Voice command API call failed with status ${response.status}:`, errorText);
+      return res.status(response.status).json({ error: "Gemini API returned error", details: errorText });
+    }
+
+    const data = await response.json();
+    const text = data.candidates[0].content.parts[0].text;
+    const parsedData = JSON.parse(text.trim());
+    console.log(`[PROXY] Voice command resolved: Action=${parsedData.action}`);
+    res.json(parsedData);
+
+  } catch (error) {
+    console.error("[PROXY] Internal error during voice command processing:", error);
+    res.status(500).json({ error: "Internal error processing voice command", message: error.message });
   }
 });
 
