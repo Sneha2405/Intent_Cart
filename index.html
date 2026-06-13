@@ -1,0 +1,2663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IntentCart: AI-Powered Shopping by Intent (Integrated Portal)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            amazon: {
+              dark: '#131921',
+              navy: '#232f3e',
+              orange: '#FF9900',
+              yellow: '#F0C14B',
+              bgLight: '#EAEDED'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Smooth transitions */
+    .fade-in {
+      animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Premium emergency card glow */
+    .emergency-glow {
+      box-shadow: 0 0 30px rgba(244, 63, 94, 0.15);
+      border-color: rgba(244, 63, 94, 0.25);
+    }
+    
+    /* Pulsing effects */
+    @keyframes pulse-border {
+      0%, 100% { border-color: rgba(244, 63, 94, 0.3); }
+      50% { border-color: rgba(244, 63, 94, 0.7); }
+    }
+    .pulse-emergency-border {
+      animation: pulse-border 2s infinite;
+    }
+
+    /* Radar pulse icon */
+    .radar-pulse {
+      position: relative;
+    }
+    .radar-pulse::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: rgba(244, 63, 94, 0.4);
+      animation: radar-grow 2s infinite;
+      z-index: 0;
+      top: 0;
+      left: 0;
+    }
+    @keyframes radar-grow {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    /* Scanning beam animation */
+    .scan-container {
+      position: relative;
+      overflow: hidden;
+    }
+    .scan-beam {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(to right, transparent, rgba(244, 63, 94, 0.85), transparent);
+      box-shadow: 0 0 12px rgba(244, 63, 94, 0.9);
+      animation: scan-move 2.2s infinite linear;
+      z-index: 10;
+    }
+    @keyframes scan-move {
+      0% { top: 0%; }
+      50% { top: 100%; }
+      100% { top: 0%; }
+    }
+    
+    /* Interactive Swipe Dispatch glow track */
+    .dispatch-track-glow {
+      background: linear-gradient(90deg, rgba(244, 63, 94, 0.08) 0%, rgba(251, 146, 60, 0.08) 50%, rgba(244, 63, 94, 0.08) 100%);
+      position: relative;
+    }
+    .dispatch-track-glow::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(90deg, rgba(244, 63, 94, 0.35), rgba(251, 146, 60, 0.65), rgba(244, 63, 94, 0.35));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Shimmer Animation */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .shimmer {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite linear;
+    }
+
+    /* Accessibility Zoom Mode styling */
+    body.a11y-text-zoom {
+      font-size: 1.25rem !important;
+    }
+    body.a11y-text-zoom h1 {
+      font-size: 3rem !important;
+      line-height: 1.15 !important;
+    }
+    body.a11y-text-zoom h2 {
+      font-size: 2.2rem !important;
+    }
+    body.a11y-text-zoom h3 {
+      font-size: 1.8rem !important;
+    }
+    body.a11y-text-zoom h4 {
+      font-size: 1.5rem !important;
+    }
+    body.a11y-text-zoom p, 
+    body.a11y-text-zoom span, 
+    body.a11y-text-zoom button, 
+    body.a11y-text-zoom input, 
+    body.a11y-text-zoom textarea,
+    body.a11y-text-zoom a {
+      font-size: 1.1rem !important;
+    }
+
+    /* Accessibility High Contrast Mode styling */
+    body.a11y-high-contrast {
+      background-color: #000000 !important;
+      color: #ffffff !important;
+    }
+    body.a11y-high-contrast .bg-white,
+    body.a11y-high-contrast .bg-slate-50,
+    body.a11y-high-contrast .bg-slate-900,
+    body.a11y-high-contrast .bg-slate-950,
+    body.a11y-high-contrast header {
+      background-color: #121212 !important;
+      color: #ffffff !important;
+      border-color: #ffffff !important;
+    }
+    body.a11y-high-contrast p, 
+    body.a11y-high-contrast span, 
+    body.a11y-high-contrast h1, 
+    body.a11y-high-contrast h2, 
+    body.a11y-high-contrast h3, 
+    body.a11y-high-contrast h4, 
+    body.a11y-high-contrast h5, 
+    body.a11y-high-contrast h6,
+    body.a11y-high-contrast label,
+    body.a11y-high-contrast div {
+      color: #ffffff !important;
+    }
+    body.a11y-high-contrast button {
+      background-color: #ffff00 !important;
+      color: #000000 !important;
+      border: 2px solid #ffffff !important;
+      font-weight: 900 !important;
+    }
+    body.a11y-high-contrast input, 
+    body.a11y-high-contrast textarea {
+      background-color: #000000 !important;
+      color: #ffffff !important;
+      border: 2px solid #ffffff !important;
+    }
+    body.a11y-high-contrast .border,
+    body.a11y-high-contrast .border-slate-200,
+    body.a11y-high-contrast .border-slate-800 {
+      border-color: #ffffff !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen pb-16">
+
+  <!-- ================= HEADER ================= -->
+  <header class="bg-amazon-dark text-white sticky top-0 z-40 shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1 cursor-pointer" onclick="resetSearch()">
+          <span class="text-white text-2xl font-extrabold tracking-tight font-display">intent</span>
+          <span class="text-amazon-orange text-2xl font-extrabold tracking-tight font-display">Cart</span>
+        </div>
+        <div class="hidden sm:flex items-center gap-1.5 bg-amazon-navy px-2.5 py-1 rounded text-[10px] text-amazon-orange font-semibold border border-slate-700/50 cursor-pointer hover:bg-slate-800 transition-colors" onclick="openApiKeyModal()">
+          <i data-lucide="sparkles" class="w-3 h-3"></i>
+          <span id="gemini-status-text">Configure Gemini API</span>
+        </div>
+      </div>
+
+      <p class="hidden md:block text-slate-300 text-xs italic">
+        "Tell Amazon what you want to achieve, not what you want to buy."
+      </p>
+
+      <div class="flex items-center gap-4">
+        <!-- Emergency Triage Button -->
+        <button 
+          id="emergency-toggle-btn"
+          onclick="toggleEmergencyMode()"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-rose-600 bg-rose-500/10 text-rose-500 text-xs font-extrabold hover:bg-rose-500/20 transition-all animate-pulse"
+        >
+          <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+          <span>Emergency mode</span>
+        </button>
+
+        <!-- Cart Icon -->
+        <button 
+          onclick="toggleCart(true)"
+          class="flex items-center gap-2 text-amazon-orange hover:text-white transition-colors"
+        >
+          <div class="relative">
+            <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+            <span id="cart-badge" class="absolute -top-1.5 -right-2 bg-amazon-orange text-slate-950 font-black text-[9px] rounded-full w-4 h-4 flex items-center justify-center">0</span>
+          </div>
+          <span class="text-white text-sm font-semibold hidden sm:block font-sans">Cart</span>
+        </button>
+      </div>
+    </div>
+    <!-- Orange accent line -->
+    <div class="h-0.5 bg-amazon-orange" />
+  </header>
+
+  <!-- ================= HERO INTENT SEARCH AREA (DARK) ================= -->
+  <section id="hero-search-section" class="bg-gradient-to-br from-amazon-dark via-amazon-navy to-slate-900 text-white py-14 px-4 shadow-inner">
+    <div class="max-w-3xl mx-auto text-center space-y-6">
+      
+      <div class="flex items-center justify-center gap-2">
+        <i data-lucide="sparkles" class="text-amazon-orange w-5 h-5"></i>
+        <span class="text-amazon-orange font-semibold text-xs uppercase tracking-wider">AI-Powered Shopping</span>
+      </div>
+
+      <h1 class="text-3xl sm:text-4xl font-extrabold leading-tight font-display">
+        Tell Amazon what you <span class="text-amazon-orange">want to achieve</span>,<br>
+        not what you want to buy.
+      </h1>
+      
+      <p class="text-slate-300 text-base">
+        From intent to cart in <span class="text-amazon-yellow font-bold font-sans">under 30 seconds</span>.
+      </p>
+
+      <form onsubmit="handleSearchSubmit(event)" class="space-y-3">
+        <div class="relative">
+          <textarea
+            id="intent-input"
+            placeholder="What are you planning? e.g. Planning a birthday party for 20 people..."
+            rows="2"
+            class="w-full rounded-xl border border-transparent focus:border-amazon-orange bg-white text-gray-900 px-5 py-4 pr-24 text-sm outline-none resize-none placeholder-gray-400 transition-colors font-sans"
+          ></textarea>
+          <div class="absolute right-4 top-4 flex items-center gap-3">
+            <button
+              id="voice-search-btn"
+              type="button"
+              onclick="startVoiceSearch()"
+              class="text-gray-400 hover:text-amazon-orange transition-colors duration-200"
+              title="Voice Search"
+            >
+              <i data-lucide="mic" class="w-5 h-5"></i>
+            </button>
+            <i data-lucide="search" class="text-gray-400 w-5 h-5"></i>
+          </div>
+        </div>
+
+        <!-- Optional budget input -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onclick="toggleBudgetInput()"
+            class="text-xs text-slate-300 hover:text-amazon-yellow underline underline-offset-2 transition-colors font-sans"
+          >
+            + Add budget (optional)
+          </button>
+          <div id="budget-input-wrap" class="hidden flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5 border border-white/10">
+            <span class="text-xs text-amazon-yellow font-sans">₹</span>
+            <input
+              type="number"
+              id="budget-amount"
+              placeholder="e.g. 5000"
+              class="bg-transparent text-white placeholder-gray-400 outline-none w-20 text-xs font-sans"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-amazon-orange hover:bg-orange-500 text-slate-950 font-black py-4 rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow"
+        >
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span>Start Shopping Smarter</span>
+        </button>
+      </form>
+
+      <!-- Pre-baked prompts -->
+      <div class="pt-4">
+        <p class="text-slate-400 text-xs mb-3 font-sans">Try one of these:</p>
+        <div class="flex flex-wrap gap-2 justify-center">
+          <button onclick="applyPrompt('I\'m moving into a hostel next week with ₹5000')" class="text-xs bg-white/10 hover:bg-white/20 hover:border-amazon-orange text-white px-4 py-2 rounded-full transition-all border border-white/5 font-sans">
+            I'm moving into a hostel next week with ₹5000
+          </button>
+          <button onclick="applyPrompt('Planning a birthday party for 20 people')" class="text-xs bg-white/10 hover:bg-white/20 hover:border-amazon-orange text-white px-4 py-2 rounded-full transition-all border border-white/5 font-sans">
+            Planning a birthday party for 20 people
+          </button>
+          <button onclick="applyPrompt('Setting up a home office under ₹15000')" class="text-xs bg-white/10 hover:bg-white/20 hover:border-amazon-orange text-white px-4 py-2 rounded-full transition-all border border-white/5 font-sans">
+            Setting up a home office under ₹15000
+          </button>
+          <button onclick="applyPrompt('Going on a 5-day Himalayan trek')" class="text-xs bg-white/10 hover:bg-white/20 hover:border-amazon-orange text-white px-4 py-2 rounded-full transition-all border border-white/5 font-sans">
+            Going on a 5-day Himalayan trek
+          </button>
+        </div>
+      </div>
+
+      <!-- Order History on Landing Page -->
+      <div id="landing-past-orders" class="pt-6 mt-6 border-t border-white/10 hidden">
+        <p class="text-slate-400 text-xs mb-3 font-sans">Smart Reorder from Past Scenarios:</p>
+        <div id="landing-past-orders-list" class="flex flex-wrap gap-3 justify-center">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+    </div>
+  </section>
+  
+  <section id="emergency-mode-section" class="hidden max-w-4xl mx-auto px-4 py-8 fade-in text-center">
+    <div class="bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 border border-rose-950/45 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden emergency-glow pulse-emergency-border">
+      
+      <!-- Ambient light effect behind -->
+      <div class="absolute -top-20 -left-20 w-56 h-56 rounded-full bg-rose-500/10 blur-3xl"></div>
+      <div class="absolute -bottom-20 -right-20 w-56 h-56 rounded-full bg-orange-500/10 blur-3xl"></div>
+
+      <div class="flex justify-between items-center border-b border-rose-900/30 pb-4 relative z-10">
+        <div class="flex items-center gap-2">
+          <i data-lucide="shield-alert" class="text-rose-500 animate-pulse w-6 h-6"></i>
+          <div class="text-left">
+            <h3 class="font-black text-rose-500 uppercase tracking-widest text-xs font-display">Urgent Dispatch Portal</h3>
+            <span class="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Network Status: Live MFC Connection</span>
+          </div>
+        </div>
+        <button onclick="toggleEmergencyMode()" class="text-[10px] bg-rose-950/40 border border-rose-900/30 text-rose-400 px-3.5 py-1.5 rounded-xl hover:bg-rose-900/30 hover:text-white transition-all font-bold">
+          Exit Emergency
+        </button>
+      </div>
+
+      <!-- Emergency Category Cards Grid -->
+      <div id="emergency-grid-wrap" class="relative z-10 space-y-5">
+        <div class="text-left max-w-md">
+          <h2 class="text-white text-lg font-black font-display tracking-tight">Active Triage Dispatch</h2>
+          <p class="text-slate-400 text-xs mt-1">Select your immediate shortage below. The system bypasses standard search, locks micro-fulfillment center stock, and assigns the nearest courier.</p>
+        </div>
+
+        <div id="emergency-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+          <button onclick="selectEmergency('baby')" class="group flex flex-col items-center justify-center p-6 bg-slate-900/80 hover:bg-slate-950 border border-slate-800/80 hover:border-rose-500 rounded-2xl text-center gap-3 transition-all transform hover:-translate-y-1 shadow-lg">
+            <div class="w-14 h-14 bg-rose-500/10 border border-rose-500/20 group-hover:bg-rose-500/20 group-hover:scale-105 rounded-full flex items-center justify-center text-3xl transition-all relative radar-pulse">🍼</div>
+            <div class="text-slate-200">
+              <span class="block text-xs font-black tracking-wide font-display">Baby Care</span>
+              <span class="block text-[9px] text-slate-500 font-sans mt-0.5">Formula, Diapers</span>
+            </div>
+          </button>
+          <button onclick="selectEmergency('firstaid')" class="group flex flex-col items-center justify-center p-6 bg-slate-900/80 hover:bg-slate-950 border border-slate-800/80 hover:border-rose-500 rounded-2xl text-center gap-3 transition-all transform hover:-translate-y-1 shadow-lg">
+            <div class="w-14 h-14 bg-rose-500/10 border border-rose-500/20 group-hover:bg-rose-500/20 group-hover:scale-105 rounded-full flex items-center justify-center text-3xl transition-all relative radar-pulse">🤒</div>
+            <div class="text-slate-200">
+              <span class="block text-xs font-black tracking-wide font-display">First Aid</span>
+              <span class="block text-[9px] text-slate-500 font-sans mt-0.5">Meds, Bandages</span>
+            </div>
+          </button>
+          <button onclick="selectEmergency('tech')" class="group flex flex-col items-center justify-center p-6 bg-slate-900/80 hover:bg-slate-950 border border-slate-800/80 hover:border-rose-500 rounded-2xl text-center gap-3 transition-all transform hover:-translate-y-1 shadow-lg">
+            <div class="w-14 h-14 bg-rose-500/10 border border-rose-500/20 group-hover:bg-rose-500/20 group-hover:scale-105 rounded-full flex items-center justify-center text-3xl transition-all relative radar-pulse">🔌</div>
+            <div class="text-slate-200">
+              <span class="block text-xs font-black tracking-wide font-display">Tech Crisis</span>
+              <span class="block text-[9px] text-slate-500 font-sans mt-0.5">Chargers, Adapters</span>
+            </div>
+          </button>
+          <button onclick="selectEmergency('baking')" class="group flex flex-col items-center justify-center p-6 bg-slate-900/80 hover:bg-slate-950 border border-slate-800/80 hover:border-rose-500 rounded-2xl text-center gap-3 transition-all transform hover:-translate-y-1 shadow-lg">
+            <div class="w-14 h-14 bg-rose-500/10 border border-rose-500/20 group-hover:bg-rose-500/20 group-hover:scale-105 rounded-full flex items-center justify-center text-3xl transition-all relative radar-pulse">🥚</div>
+            <div class="text-slate-200">
+              <span class="block text-xs font-black tracking-wide font-display">Forgot Ingredient</span>
+              <span class="block text-[9px] text-slate-500 font-sans mt-0.5">Eggs, Flour, Butter</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- High-Tech Scanning Screen Simulation -->
+      <div id="emergency-scanning-state" class="hidden relative z-10 py-12 flex flex-col items-center justify-center space-y-6">
+        <div class="relative w-24 h-24 flex items-center justify-center">
+          <div class="absolute inset-0 rounded-full border-4 border-rose-500/20 animate-ping"></div>
+          <div class="absolute inset-2 rounded-full border-4 border-rose-500/40 animate-pulse"></div>
+          <div class="w-16 h-16 rounded-full bg-gradient-to-br from-rose-500 to-rose-700 shadow-lg shadow-rose-500/50 flex items-center justify-center text-white relative z-10">
+            <i data-lucide="radio" class="w-8 h-8 animate-pulse text-white"></i>
+          </div>
+        </div>
+        <div class="space-y-1 text-center">
+          <h4 class="text-rose-500 font-extrabold text-sm uppercase tracking-widest animate-pulse font-display">Triage Scanning Active</h4>
+          <p class="text-slate-400 text-[11px] font-sans">Connecting to Nearest Micro-Fulfillment Center (MFC-4)...</p>
+        </div>
+        <div class="w-72 text-left bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4 font-mono text-[10px] text-slate-400 space-y-1">
+          <div class="flex items-center gap-1.5 text-emerald-400">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>[OK] Locked MFC-4 coordinates</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-emerald-400">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>[OK] Reserved emergency stock</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-rose-400 animate-pulse">
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+            <span>[SYNC] Mapping nearest rider...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Urgent Product Match (Stunning split-column layout) -->
+      <div id="emergency-resolution" class="hidden max-w-3xl mx-auto space-y-6 relative z-10 pt-2 font-sans">
+        
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 text-left">
+          
+          <!-- Left Column: Product Visual scanner -->
+          <div class="md:col-span-5 bg-slate-950 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl scan-container flex flex-col justify-between">
+            <div class="relative flex-grow">
+              <img id="e-prod-img" src="" alt="Emergency match" class="w-full h-56 object-cover opacity-90 transition-transform duration-500 hover:scale-105">
+              <div class="scan-beam"></div>
+              <span class="absolute top-3 left-3 bg-gradient-to-r from-rose-600 to-rose-700 text-white font-sans text-[9px] font-black tracking-widest uppercase px-3 py-1 rounded-full shadow-lg flex items-center gap-1 border border-rose-400/20">
+                <i data-lucide="zap" class="w-3 h-3 fill-white"></i> AI Urgent Match
+              </span>
+              <span class="absolute bottom-3 right-3 bg-emerald-500 text-slate-950 font-black text-xs px-3.5 py-1 rounded-full shadow-lg flex items-center gap-1 font-sans border border-emerald-400/20">
+                <i data-lucide="bike" class="w-3.5 h-3.5"></i> 9 Mins ETA
+              </span>
+            </div>
+            <!-- In-stock alert status -->
+            <div class="p-3 bg-rose-500/10 border-t border-rose-500/10 flex items-center justify-between text-xs px-4">
+              <span class="text-rose-400 font-bold flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                Stock Reserved
+              </span>
+              <span class="text-slate-400 text-[10px]">MFC-4 (0.8 mi away)</span>
+            </div>
+          </div>
+
+          <!-- Right Column: Specs & Dispatch details -->
+          <div class="md:col-span-7 flex flex-col justify-between space-y-4 text-left">
+            <div class="space-y-3">
+              <div class="flex justify-between items-center">
+                <span id="e-prod-brand" class="text-[10px] text-rose-400 font-bold uppercase tracking-wider font-sans bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">Brand</span>
+                <span class="text-xs text-amber-500">★★★★★ <span class="text-slate-500 font-sans text-[10px]">(4.8k reviews)</span></span>
+              </div>
+              <h4 id="e-prod-name" class="text-xl font-black text-white tracking-tight leading-tight font-display">Pampers Diapers</h4>
+              
+              <!-- Explanation recommendation card -->
+              <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 flex items-start gap-2.5">
+                <div class="w-6 h-6 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0 mt-0.5 border border-rose-500/20 text-rose-500">
+                  <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                </div>
+                <div>
+                  <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest font-display">Triage Recommendation</span>
+                  <p id="e-prod-why" class="text-xs text-slate-300 leading-relaxed font-sans mt-0.5">Locked as the best matching option close to your coordinates.</p>
+                </div>
+              </div>
+
+              <!-- Dispatch Stats details -->
+              <div class="grid grid-cols-2 gap-3 pt-1">
+                <div class="bg-slate-950/40 border border-slate-800/80 rounded-xl p-3">
+                  <span class="block text-[9px] text-slate-500 uppercase font-black tracking-wider">Courier Status</span>
+                  <span class="block text-xs font-bold text-white mt-0.5 flex items-center gap-1">
+                    <i data-lucide="user-check" class="w-3.5 h-3.5 text-rose-500"></i>
+                    Rajesh K. (Active)
+                  </span>
+                </div>
+                <div class="bg-slate-950/40 border border-slate-800/80 rounded-xl p-3">
+                  <span class="block text-[9px] text-slate-500 uppercase font-black tracking-wider">Route Optimization</span>
+                  <span class="block text-xs font-bold text-white mt-0.5 flex items-center gap-1">
+                    <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-500"></i>
+                    Express Transit Lane
+                  </span>
+                </div>
+              </div>
+              
+              <!-- Quantity control & Alternative toggle -->
+              <div class="flex items-center gap-4 pt-2 border-t border-slate-800/60">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Qty:</span>
+                  <div class="flex items-center border border-slate-700 rounded-lg bg-slate-950 overflow-hidden text-xs">
+                    <button onclick="updateEmergencyQty(-1)" class="px-2.5 py-1.5 hover:bg-slate-800 text-slate-400 transition-colors font-bold">-</button>
+                    <span id="emergency-qty" class="px-3 text-white font-bold">1</span>
+                    <button onclick="updateEmergencyQty(1)" class="px-2.5 py-1.5 hover:bg-slate-800 text-slate-400 transition-colors font-bold">+</button>
+                  </div>
+                </div>
+                
+                <div class="flex-grow flex justify-end">
+                  <button onclick="cycleAlternativeScenario()" class="text-[10px] text-rose-400 hover:text-white border border-rose-500/20 hover:border-rose-500 bg-rose-500/5 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 font-bold">
+                    <i data-lucide="refresh-cw" class="w-3 h-3"></i> Try Alternative Brand
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-baseline justify-between pt-3 border-t border-slate-800/80">
+              <span class="text-[10px] text-slate-400 font-sans uppercase tracking-widest font-bold">Total Price (Inc. delivery)</span>
+              <span id="e-prod-price" class="text-3xl font-black text-white font-sans">₹999</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="flex justify-between items-center text-xs text-rose-400 px-2 pt-2">
+          <button onclick="changeEmergencyScenario()" class="hover:underline font-semibold font-sans flex items-center gap-1">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i> Back to categories
+          </button>
+          <span class="flex items-center gap-1 font-sans"><i data-lucide="clock" class="w-3.5 h-3.5"></i> Payment Pre-authorized</span>
+        </div>
+
+        <!-- Swipe button inside Emergency -->
+        <div class="relative w-full h-16 rounded-full flex items-center justify-center select-none overflow-hidden border dispatch-track-glow border-rose-500/30 text-rose-400 shadow-inner">
+          <div 
+            id="swipe-handle-emergency"
+            class="absolute left-1.5 w-13 h-13 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg bg-gradient-to-r from-rose-600 to-rose-700 hover:scale-105 transition-all text-white border border-rose-400/20"
+            style="width: 52px; height: 52px;"
+          >
+            <i data-lucide="chevrons-right" class="w-6 h-6 animate-pulse"></i>
+          </div>
+          <span class="text-xs font-black tracking-widest uppercase opacity-85 font-sans pl-8 animate-pulse text-rose-300">Swipe to Dispatch Rider</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Custom/Fallback Intent Screen -->
+  <section id="custom-intent-section" class="hidden max-w-2xl mx-auto px-4 py-8 fade-in text-center">
+    <div class="bg-white border border-slate-200 rounded-3xl p-8 space-y-6 shadow-xl text-slate-800">
+      <div class="w-16 h-16 bg-amber-100 border border-amber-200 text-amber-600 rounded-full flex items-center justify-center text-3xl mx-auto">
+        🤔
+      </div>
+      <div class="space-y-2">
+        <h2 class="text-2xl font-extrabold font-display text-slate-900">Custom Intent Detected</h2>
+        <p class="text-slate-550 text-sm">"I see you want to: <span id="custom-intent-text" class="font-bold text-slate-805"></span>"</p>
+      </div>
+      
+      <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 text-left space-y-4">
+        <p class="text-xs text-slate-655 font-semibold font-sans">Could you tell me a bit more about your needs to help me build the perfect cart?</p>
+        <div class="space-y-3 font-sans">
+          <div>
+            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Number of People / Scale</label>
+            <input id="custom-scale" type="text" placeholder="e.g. 3 people, just me" class="w-full text-xs px-3 py-2 border rounded-lg focus:border-amazon-orange outline-none bg-white">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Specific requirements or notes</label>
+            <textarea id="custom-details" placeholder="e.g. gluten-free, organic, budget-friendly" rows="2" class="w-full text-xs px-3 py-2 border rounded-lg focus:border-amazon-orange outline-none resize-none bg-white"></textarea>
+          </div>
+        </div>
+        <button 
+          onclick="submitCustomIntentDetails()"
+          class="w-full py-3 bg-amazon-orange hover:bg-orange-500 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5"
+        >
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Synthesize Optimized Cart
+        </button>
+      </div>
+      
+      <div class="flex items-center justify-center gap-1.5 text-xs text-slate-450 font-sans">
+        <button onclick="resetSearch()" class="text-slate-450 hover:text-slate-600 underline">Back to home</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RESULTS VIEW (PRODUCT GRID + SIDEBAR) ================= -->
+  <section id="results-view-section" class="hidden max-w-6xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+    
+    <!-- Left Column: Products -->
+    <div class="space-y-8">
+      
+      <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div>
+          <h2 class="text-2xl font-extrabold text-slate-900 flex items-center gap-2 font-display">
+            <i data-lucide="zap" class="text-amazon-orange w-6 h-6"></i>
+            Your Personalized Cart
+          </h2>
+          <p class="text-xs text-slate-500 mt-1">
+            Items curated for "<span id="display-intent-name" class="font-bold text-slate-800">Pasta Dinner Night</span>"
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="addAllToCart()" class="bg-amazon-orange hover:bg-orange-500 text-slate-955 font-black text-xs py-2.5 px-4 rounded-lg shadow active:scale-95 transition-all">
+            Add All to Cart
+          </button>
+          <button onclick="resetSearch()" class="text-xs text-slate-400 hover:text-orange-500 underline flex items-center gap-1 font-sans">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> New search
+          </button>
+        </div>
+      </div>
+
+      <!-- Essential Items Container -->
+      <div class="space-y-4 text-left">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          <h3 class="font-bold text-slate-800 text-base font-display">Essential Items</h3>
+        </div>
+
+        <!-- Product Cards Grid (Essentials) -->
+        <div id="essential-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="border-t border-dashed border-slate-200 my-6"></div>
+
+      <!-- Nice-to-Have Items Container -->
+      <div class="space-y-4 text-left">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+          <h3 class="font-bold text-slate-800 text-base font-display">Nice-to-Have Items</h3>
+        </div>
+
+        <!-- Product Cards Grid (Nice-to-Haves) -->
+        <div id="nice-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Sidebar Widgets -->
+    <aside class="space-y-6">
+      
+      <!-- BUDGET SUMMARY WIDGET -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4 text-left">
+        <div class="flex items-center gap-2">
+          <i data-lucide="indian-rupee" class="text-amazon-orange w-5 h-5"></i>
+          <h3 class="font-bold text-slate-800 text-sm font-display">Budget Summary</h3>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 text-center">
+          <div>
+            <p id="budget-essentials-cost" class="text-xl font-black text-slate-900">₹350</p>
+            <p class="text-[10px] text-slate-400 mt-1">Essentials</p>
+          </div>
+          <div>
+            <p id="budget-all-cost" class="text-xl font-black text-purple-700">₹870</p>
+            <p class="text-[10px] text-slate-400 mt-1">All Items</p>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <div class="flex justify-between text-[11px] text-slate-500">
+            <span>Budget usage (essentials)</span>
+            <span id="budget-usage-pct" class="font-bold text-slate-700 font-sans">18%</span>
+          </div>
+          <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+            <div id="budget-progress-bar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 18%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTENT RECOGNIZED WIDGET -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 text-left">
+        <div class="flex items-center gap-2 mb-3">
+          <i data-lucide="brain" class="text-amazon-orange w-5 h-5"></i>
+          <h3 class="font-bold text-slate-800 text-sm font-display">Intent Recognized</h3>
+        </div>
+        <div class="flex items-center justify-between">
+          <span id="recognized-intent-label" class="text-base font-extrabold text-slate-900">Pasta Cooking</span>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200">
+            High Confidence
+          </span>
+        </div>
+      </div>
+
+      <!-- YOU MAY FORGET WIDGET -->
+      <div class="bg-amber-50 rounded-xl border border-amber-100 p-5 text-left animate-pulse">
+        <div class="flex items-center gap-2 mb-3">
+          <i data-lucide="check-square" class="text-amber-600 w-5 h-5"></i>
+          <h3 class="font-bold text-amber-800 text-sm font-display">You may forget:</h3>
+        </div>
+        <ul id="hidden-needs-list" class="space-y-2">
+          <!-- Loaded dynamically -->
+        </ul>
+      </div>
+
+      <!-- AI HOUSEHOLD DEPLETION MONITOR WIDGET -->
+      <div class="bg-slate-900 border border-slate-800 text-white rounded-2xl p-5 space-y-4 text-left">
+        <div class="flex items-center gap-2">
+          <i data-lucide="trending-down" class="text-orange-500 w-5 h-5"></i>
+          <h3 class="font-extrabold text-sm tracking-wide font-display">AI Household Depletion Monitor</h3>
+        </div>
+
+        <div class="space-y-3">
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <span class="font-semibold text-slate-300">☕ Espresso Whole Beans</span>
+              <span class="text-rose-500 font-bold">10% left</span>
+            </div>
+            <div class="h-2 bg-slate-950 rounded-full overflow-hidden">
+              <div class="h-full bg-rose-500 w-[10%]" />
+            </div>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <span class="font-semibold text-slate-300">🧻 Ultra Toilet Paper</span>
+              <span class="text-amber-500 font-bold">25% left</span>
+            </div>
+            <div class="h-2 bg-slate-950 rounded-full overflow-hidden">
+              <div class="h-full bg-amber-500 w-[25%]" />
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-955 border border-slate-800 rounded-xl p-3 space-y-2">
+          <span class="text-[10px] font-bold text-orange-500 uppercase tracking-widest font-display">Quick Refill Bundle</span>
+          <button 
+            onclick="triggerLiveTracking()"
+            class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-slate-955 font-black rounded-lg text-xs flex justify-between px-3"
+          >
+            <span>Buy Refill Bundle</span>
+            <span>₹1,320</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- GUIDED DECISION TRIAGE WIDGET -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4 text-left shadow-sm">
+        <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+          <i data-lucide="help-circle" class="text-amazon-orange w-5 h-5"></i>
+          <h3 class="font-bold text-slate-800 text-sm font-display">Guided Decision Helper</h3>
+        </div>
+
+        <div id="triage-wizard">
+          <div id="triage-step-content" class="space-y-3 font-sans">
+            <!-- Populated dynamically via JS -->
+          </div>
+
+          <div id="triage-result" class="hidden space-y-4 text-center font-sans animate-fade-in">
+            <div class="text-emerald-500 text-xs font-bold flex items-center justify-center gap-1 font-sans">
+              <span>✓ Recommendation Ready</span>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-3 text-left font-sans">
+              <span id="triage-rec-emoji" class="text-3xl">🍼</span>
+              <div>
+                <span class="text-[8px] bg-orange-500/20 text-orange-700 border border-orange-500/30 px-2 py-0.5 rounded font-extrabold uppercase font-sans">AI MATCH</span>
+                <h5 id="triage-rec-name" class="text-xs font-bold text-slate-800 mt-1 font-sans">Pampers Pure Protection</h5>
+                <p id="triage-rec-details" class="text-[9px] text-slate-550 font-sans"></p>
+                <p id="triage-rec-price" class="text-sm font-bold text-gray-900 mt-1 font-sans">₹1,150</p>
+              </div>
+            </div>
+            <button onclick="resetTriage()" class="text-[10px] text-slate-400 hover:text-orange-500 underline font-sans">Restart Quiz</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDER HISTORY & SMART REORDER WIDGET -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4 text-left shadow-sm">
+        <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+          <i data-lucide="history" class="text-amazon-orange w-5 h-5"></i>
+          <h3 class="font-bold text-slate-800 text-sm font-display">Order History & Smart Reorder</h3>
+        </div>
+        
+        <div id="past-orders-list" class="space-y-3 font-sans">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+    </aside>
+  </section>
+
+  <!-- ================= LANDING PROMPT / USAGE STATS CONTAINER ================= -->
+  <section id="landing-usage-stats" class="max-w-5xl mx-auto px-4 py-14 space-y-12">
+    <div class="text-center space-y-3">
+      <h2 class="text-2xl font-black text-slate-800 font-display">Real-World Social & Operational Impact</h2>
+      <p class="text-slate-500 text-sm max-w-md mx-auto">Intent-based quick-commerce redefines efficiency, decision-making, and digital inclusion.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 text-center">
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-2 flex flex-col justify-between">
+        <p class="text-[9px] uppercase tracking-widest text-slate-400 font-extrabold">Time Saved</p>
+        <p class="text-3xl font-black text-amazon-orange font-display"><span class="counter" data-target="95">0</span>%</p>
+        <p class="text-[11px] text-slate-500 font-sans">Reduced shopping time from 12 mins to 30 secs.</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-2 flex flex-col justify-between">
+        <p class="text-[9px] uppercase tracking-widest text-slate-400 font-extrabold">Fatigue reduction</p>
+        <p class="text-3xl font-black text-blue-600 font-display"><span class="counter" data-target="94">0</span>%</p>
+        <p class="text-[11px] text-slate-500 font-sans">Fewer choice paths: filters 10,000 SKUs into 3-7 key picks.</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-2 flex flex-col justify-between">
+        <p class="text-[9px] uppercase tracking-widest text-slate-400 font-extrabold">Emergency Dispatch</p>
+        <p class="text-3xl font-black text-rose-500 font-display">&lt; <span class="counter" data-target="10">0</span>m</p>
+        <p class="text-[11px] text-slate-500 font-sans">Critical diapers/medicine matching & routing ETA.</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-2 flex flex-col justify-between">
+        <p class="text-[9px] uppercase tracking-widest text-slate-400 font-extrabold">Abandonment</p>
+        <p class="text-3xl font-black text-purple-600 font-display">-<span class="counter" data-target="67">0</span>%</p>
+        <p class="text-[11px] text-slate-500 font-sans">Higher shopping confidence, less search frustration.</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-2 flex flex-col justify-between">
+        <p class="text-[9px] uppercase tracking-widest text-slate-400 font-extrabold font-sans">A11y Coverage</p>
+        <p class="text-3xl font-black text-emerald-600 font-display"><span class="counter" data-target="285">0</span>M</p>
+        <p class="text-[11px] text-slate-500 font-sans">Allows visually/motor-impaired users to shop independently.</p>
+      </div>
+    </div>
+
+    <!-- How it works flow -->
+    <div class="text-center space-y-6">
+      <h2 class="text-xl font-bold text-slate-800">How IntentCart works</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 text-left shadow-sm">
+          <span class="text-3xl font-extrabold text-amazon-orange/25">01</span>
+          <p class="font-bold text-slate-800 mt-2">Describe your goal</p>
+          <p class="text-slate-500 text-xs mt-1 leading-relaxed">Type what you are planning in simple natural language.</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 text-left shadow-sm">
+          <span class="text-3xl font-extrabold text-amazon-orange/25">02</span>
+          <p class="font-bold text-slate-800 mt-2">AI understands intent</p>
+          <p class="text-slate-500 text-xs mt-1 leading-relaxed">Gemini classifies your need and detects constraints.</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 text-left shadow-sm">
+          <span class="text-3xl font-extrabold text-amazon-orange/25">03</span>
+          <p class="font-bold text-slate-800 mt-2">Predict hidden needs</p>
+          <p class="text-slate-500 text-xs mt-1 leading-relaxed">AI automatically suggests essentials you might forget.</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 text-left shadow-sm">
+          <span class="text-3xl font-extrabold text-amazon-orange/25">04</span>
+          <p class="font-bold text-slate-800 mt-2">Instant curated cart</p>
+          <p class="text-slate-500 text-xs mt-1 leading-relaxed">Essential and nice-to-have items, budget-optimized.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DRAWER: CART WITH SMART UPSELL ================= -->
+  <div id="cart-drawer" class="hidden fixed inset-0 z-50 flex">
+    <div class="flex-1 bg-black/40 backdrop-blur-sm" onclick="toggleCart(false)"></div>
+    <div class="w-full max-w-sm bg-white h-full flex flex-col shadow-2xl">
+      
+      <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="shopping-cart" class="w-5 h-5 text-amazon-orange"></i>
+          <span class="font-bold text-lg font-display">Your Cart (<span id="cart-count">0</span>)</span>
+        </div>
+        <button onclick="toggleCart(false)" class="hover:text-orange-500 transition-colors">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <div class="flex-grow overflow-y-auto p-4 space-y-3">
+        <!-- Item list -->
+        <div id="cart-items-list" class="space-y-3">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Smart Upsell Recommendation -->
+        <div id="smart-cart-upsell" class="hidden bg-orange-50 border border-orange-100 rounded-xl p-4 mt-4 space-y-3 text-left text-slate-900">
+          <div class="flex items-start gap-2">
+            <span class="text-base">🤖</span>
+            <p class="text-xs text-orange-955 font-semibold font-sans">Pasta is incomplete without sauce. Add our local favorite?</p>
+          </div>
+          <div class="flex items-center justify-between gap-3 bg-white p-2.5 rounded-lg border border-orange-200/50">
+            <div class="flex items-center gap-2">
+              <img src="https://images.unsplash.com/photo-1608797178974-15b35a61d121?auto=format&fit=crop&w=150&q=80" alt="Sauce" class="w-9 h-9 object-cover rounded">
+              <div>
+                <h5 class="text-[11px] font-bold text-gray-800">Rao's Marinara</h5>
+                <p class="text-[10px] text-orange-600 font-bold">₹520</p>
+              </div>
+            </div>
+            <button 
+              onclick="addSauceToCart()"
+              class="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-all font-sans"
+            >
+              + Add
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Total & Swipe Checkout -->
+      <div class="border-t border-gray-100 p-4 space-y-3 text-slate-800">
+        <div class="flex justify-between text-base font-bold text-gray-900">
+          <span>Subtotal</span>
+          <span id="cart-subtotal">₹0</span>
+        </div>
+        
+        <!-- Swipe Component standard -->
+        <div class="relative w-full h-14 rounded-full flex items-center justify-center select-none overflow-hidden border bg-orange-50 border-orange-200 text-orange-800">
+          <div 
+            id="swipe-handle-standard"
+            class="absolute left-1 w-12 h-12 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing shadow bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-extrabold tracking-widest uppercase opacity-75 font-sans">Swipe to Buy Instantly</span>
+        </div>
+        <p class="text-[10px] text-gray-400 text-center font-sans">* Prime Instant 1-click checkout active</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL: LIVE TRACKER MAP ================= -->
+  <div id="tracker-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div class="w-full max-w-md bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 shadow-2xl space-y-6">
+      
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+          <h3 class="font-bold text-lg text-emerald-400 font-sans">Live Delivery Active</h3>
+        </div>
+        <button onclick="toggleTracker(false)" class="p-1 hover:bg-slate-800 rounded-full text-slate-400">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Timer -->
+      <div class="text-center bg-slate-950/50 py-4 rounded-2xl border border-slate-800">
+        <p id="tracker-timer" class="text-5xl font-black text-orange-500 font-mono tracking-wider">11:59</p>
+        <p class="text-xs text-slate-400 mt-1 uppercase font-bold tracking-widest font-sans">Estimated Minutes Remaining</p>
+      </div>
+
+      <!-- Map -->
+      <div class="relative h-32 bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        
+        <div class="absolute left-[8%] top-[65%] text-slate-500 flex flex-col items-center">
+          <span class="text-lg">🏪</span>
+          <span class="text-[9px] font-bold font-sans">MFC-4</span>
+        </div>
+
+        <div class="absolute right-[8%] top-[20%] text-orange-500 flex flex-col items-center">
+          <div class="w-6 h-6 rounded-full bg-orange-500/20 border border-orange-500 flex items-center justify-center animate-bounce">
+            <i data-lucide="home" class="w-3.5 h-3.5"></i>
+          </div>
+          <span class="text-[9px] font-bold mt-1 text-white font-sans">Home</span>
+        </div>
+
+        <!-- Animated Rider Pointer -->
+        <div id="tracker-rider" class="absolute left-[10%] top-[70%] transition-all duration-[3000ms] ease-linear -translate-x-1/2 -translate-y-1/2">
+          <div class="w-8 h-8 rounded-full bg-emerald-500 border border-emerald-300 flex items-center justify-center shadow-lg shadow-emerald-500/50 animate-pulse">
+            <i data-lucide="bike" class="w-4 h-4 text-slate-900"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div class="space-y-4 pl-4 relative border-l-2 border-slate-800 text-left font-sans">
+        <div class="relative flex gap-3 items-start font-sans">
+          <span class="absolute -left-[23px] w-4 h-4 rounded-full flex items-center justify-center border bg-emerald-500 border-emerald-500 text-slate-900 text-[9px] font-bold font-sans">✓</span>
+          <div>
+            <h4 class="text-sm font-bold text-slate-200 font-sans">Order Confirmed</h4>
+            <p class="text-[11px] text-slate-400 font-sans">Payment authorized via Amazon Pay</p>
+          </div>
+        </div>
+
+        <div class="relative flex gap-3 items-start">
+          <span id="step-pack-bullet" class="absolute -left-[23px] w-4 h-4 rounded-full flex items-center justify-center border text-[9px] font-bold bg-slate-900 border-slate-700 text-slate-400">2</span>
+          <div>
+            <h4 class="text-sm font-bold text-slate-200 font-sans">Packed & Dispatched</h4>
+            <p class="text-[11px] text-slate-400 font-sans">Retrieved from local micro-fulfillment center</p>
+          </div>
+        </div>
+
+        <div class="relative flex gap-3 items-start">
+          <span id="step-transit-bullet" class="absolute -left-[23px] w-4 h-4 rounded-full flex items-center justify-center border text-[9px] font-bold bg-slate-900 border-slate-700 text-slate-400 font-sans">3</span>
+          <div>
+            <h4 class="text-sm font-bold text-slate-200 font-sans">Rider in Transit</h4>
+            <p class="text-[11px] text-slate-400 font-sans">Rider picked up and navigating Hudson St</p>
+          </div>
+        </div>
+      </div>
+
+      <button 
+        onclick="toggleTracker(false)"
+        class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-sm transition-all"
+      >
+        Track in Background
+      </button>
+
+    </div>
+  </div>
+
+  <!-- AI Processing Overlay -->
+  <div id="ai-processing-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-955/80 backdrop-blur-md">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full mx-4 text-center space-y-6 shadow-2xl">
+      <div class="relative w-24 h-24 mx-auto flex items-center justify-center">
+        <!-- Spinning Outer Circle -->
+        <div class="absolute inset-0 rounded-full border-4 border-amazon-orange/20 border-t-amazon-orange animate-spin"></div>
+        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-amazon-navy to-slate-950 flex items-center justify-center text-amazon-orange">
+          <i data-lucide="brain" class="w-8 h-8 animate-pulse"></i>
+        </div>
+      </div>
+      <div class="space-y-2">
+        <h3 class="text-white text-lg font-black font-display tracking-tight">AI Intent Processing...</h3>
+        <p id="ai-loading-step" class="text-slate-400 text-xs font-sans animate-pulse">Decoding user request...</p>
+      </div>
+      <!-- Processing Log -->
+      <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-left font-mono text-[10px] text-slate-450 space-y-2 h-28 overflow-y-auto">
+        <div id="ai-log-1" class="hidden flex items-center gap-1.5 text-emerald-450">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>[NLP] Parsed intent tokens</span>
+        </div>
+        <div id="ai-log-2" class="hidden flex items-center gap-1.5 text-emerald-450">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>[STORE] Checked local MFC inventory</span>
+        </div>
+        <div id="ai-log-3" class="hidden flex items-center gap-1.5 text-amber-450">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+          <span>[MODEL] Synthesizing custom bundle recommendation</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Accessibility SOS Toggle -->
+  <button 
+    id="a11y-toggle-btn"
+    onclick="toggleA11yPanelToggle()"
+    class="fixed bottom-6 left-6 z-50 bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95"
+    title="Accessibility Settings (SOS)"
+  >
+    <i data-lucide="accessibility" class="w-7 h-7"></i>
+  </button>
+
+  <!-- Accessibility Settings Panel -->
+  <div 
+    id="a11y-panel"
+    class="hidden fixed bottom-24 left-6 z-50 bg-white border border-slate-200 rounded-2xl p-5 w-72 shadow-2xl space-y-4 text-slate-800 text-left"
+  >
+    <div class="flex items-center justify-between border-b pb-2">
+      <h3 class="font-bold text-sm flex items-center gap-1.5 text-blue-600 font-display">
+        <i data-lucide="accessibility" class="w-4 h-4"></i> Accessibility Options
+      </h3>
+      <button onclick="toggleA11yPanel(false)" class="text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="space-y-3 font-sans">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold">Large Text / Zoom</span>
+        <input type="checkbox" id="a11y-text-zoom" onchange="toggleTextZoom()" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500">
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold">High Contrast Mode</span>
+        <input type="checkbox" id="a11y-high-contrast" onchange="toggleHighContrast()" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500">
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold">Screen Reader (TTS)</span>
+        <input type="checkbox" id="a11y-screen-reader" onchange="toggleScreenReader()" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500">
+      </div>
+    </div>
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-[10px] text-blue-800 leading-relaxed font-sans">
+      💡 <strong>SOS Mode:</strong> Screen Reader will read out item details when you hover over cards.
+    </div>
+  </div>
+
+  <!-- Gemini API Key Configuration Modal -->
+  <div id="api-key-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="w-full max-w-sm bg-white border border-slate-200 text-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 text-left">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-sm text-amazon-orange flex items-center gap-1.5 font-display">
+          <i data-lucide="key" class="w-4 h-4"></i> Gemini API Configuration
+        </h3>
+        <button onclick="closeApiKeyModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="space-y-3 font-sans">
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Provide your Gemini API key to enable actual generative intent processing for any custom query. Your key is stored locally in your browser.
+        </p>
+        <div>
+          <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">API Key</label>
+          <input 
+            id="gemini-api-key-input" 
+            type="password" 
+            placeholder="AIzaSy..." 
+            class="w-full text-xs px-3 py-2 border rounded-lg focus:border-amazon-orange outline-none bg-white font-mono"
+          />
+        </div>
+      </div>
+      <div class="flex gap-2 font-sans">
+        <button onclick="saveApiKey()" class="flex-grow py-2 bg-amazon-orange hover:bg-orange-500 text-slate-955 font-black rounded-xl text-xs">
+          Save Settings
+        </button>
+        <button onclick="clearApiKey()" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-550 rounded-xl text-xs">
+          Clear
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    // Product Database segmented by intents
+    const INTENT_DATABASE = {
+      pasta: {
+        label: "Pasta Cooking Setup",
+        confidence: "High",
+        essentialsTotal: 760,
+        allTotal: 2380,
+        budgetPct: 38,
+        hiddenNeeds: ["Pasta sauce", "Grated parmesan cheese", "Fresh basil bundle"],
+        essentials: [
+          { id: "spag-1", name: "Artisanal Bronze-Cut Spaghetti (500g)", price: 350, rating: 4.8, reviews: 12400, brand: "De Cecco", why: "Premium bronze-cut texture perfect for holding sauce.", desc: "Imported traditional Italian recipe pasta.", img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=400&q=80" },
+          { id: "cheese-1", name: "Premium Grated Parmesan Cheese (200g)", price: 290, rating: 4.6, reviews: 4800, brand: "Amul", why: "Aged cheese yielding a rich and salty profile.", desc: "Fine grated traditional topping.", img: "https://images.unsplash.com/photo-1546964124-0cce460f38ef?auto=format&fit=crop&w=400&q=80" },
+          { id: "garlic-1", name: "Fresh Organic Garlic Bulbs (Pack of 3)", price: 120, rating: 4.5, reviews: 1200, brand: "Local Farm", why: "Essential aromatic base for marinara sauces.", desc: "Grown without synthetic pesticides.", img: "https://images.unsplash.com/photo-1540120084841-7fb92839e573?auto=format&fit=crop&w=400&q=80" }
+        ],
+        niceToHave: [
+          { id: "sauce-1", name: "Rao's Homemade Marinara Sauce (24oz)", price: 520, rating: 4.9, reviews: 9800, brand: "Rao's", why: "Slow-simmered, preservative-free premium sauce.", desc: "Voted #1 jarred marinara on the market.", img: "https://images.unsplash.com/photo-1608797178974-15b35a61d121?auto=format&fit=crop&w=150&q=80" },
+          { id: "olive-1", name: "Extra Virgin Olive Oil (500ml)", price: 890, rating: 4.7, reviews: 3200, brand: "Borges", why: "Cold-pressed olive oil for smooth finishing dressings.", desc: "Rich in antioxidants and healthy fats.", img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80" },
+          { id: "basil-1", name: "Fresh Sweet Basil Leaves (50g)", price: 60, rating: 4.8, reviews: 850, brand: "HydroFarm", why: "Adds fresh peppery notes directly on pasta servings.", desc: "Locally harvested weekly.", img: "https://images.unsplash.com/photo-1560684352-8497838a2229?auto=format&fit=crop&w=400&q=80" },
+          { id: "flakes-1", name: "Premium Red Chili Flakes Shaker", price: 150, rating: 4.6, reviews: 1400, brand: "Keya", why: "Slight heat contrast balancing tomato acidity.", desc: "Pure crushed red pepper pods.", img: "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&w=400&q=80" }
+        ],
+        upsell: { id: "sauce-1", name: "Rao's Homemade Marinara Sauce", price: 520, img: "https://images.unsplash.com/photo-1608797178974-15b35a61d121?auto=format&fit=crop&w=150&q=80" }
+      },
+      party: {
+        label: "Birthday Party Planning",
+        confidence: "High",
+        essentialsTotal: 729,
+        allTotal: 4376,
+        budgetPct: 15,
+        hiddenNeeds: ["Disposable cups & plates", "Extra ice cubes", "Party balloons & banners"],
+        essentials: [
+          { id: "p-plates", name: "Heavy-Duty Colorful Paper Plates (Pack of 50)", price: 199, rating: 4.7, reviews: 3200, brand: "PartyPro", why: "Eco-friendly compostable plates preventing dinner mess.", desc: "Sturdy and moisture-resistant design.", img: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=400&q=80" },
+          { id: "p-chips", name: "Lay's Classic Potato Chips (Party Combo 3-Pack)", price: 180, rating: 4.8, reviews: 8700, brand: "Lay's", why: "Universal crowd-pleasing snacks for hosting events.", desc: "Includes Salted, Sour Cream, and Chili styles.", img: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=400&q=80" },
+          { id: "p-choc", name: "Cadbury Celebrations Chocolate Gift Pack", price: 350, rating: 4.7, reviews: 5400, brand: "Cadbury", why: "Sweet treat assortments perfect for guests.", desc: "Assorted dairy milk chocolates.", img: "https://images.unsplash.com/photo-1549007994-cb92ca87df46?auto=format&fit=crop&w=400&q=80" }
+        ],
+        niceToHave: [
+          { id: "p-soda", name: "Coca-Cola Zero Sugar (12-Can Pack)", price: 450, rating: 4.9, reviews: 14200, brand: "Coca-Cola", why: "Zero calorie carbonated beverages in cold packaging.", desc: "Deliver ice-cold via local warehouse hubs.", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80" },
+          { id: "p-balloons", name: "Helium Chrome Metallic Balloons (Pack of 30)", price: 299, rating: 4.5, reviews: 1900, brand: "Banner Co", why: "Shining chrome layout instantly boosting aesthetics.", desc: "Biodegradable natural latex.", img: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=400&q=80" },
+          { id: "p-lights", name: "LED Outdoor Fairy Copper Lights (10m)", price: 399, rating: 4.6, reviews: 2900, brand: "Philips", why: "Warm starry atmosphere lighting.", desc: "Waterproof plug-in string lights.", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80" },
+          { id: "p-speaker", name: "JBL Go 3 Bluetooth Portable Speaker", price: 2499, rating: 4.8, reviews: 25400, brand: "JBL", why: "Compact speaker with rich audio bass reproduction.", desc: "IP67 dustproof and waterproof.", img: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=400&q=80" }
+        ]
+      },
+      trek: {
+        label: "Himalayan Trekking",
+        confidence: "High",
+        essentialsTotal: 4197,
+        allTotal: 9294,
+        budgetPct: 84,
+        hiddenNeeds: ["Headlamp", "Emergency first aid kit", "Quick-dry micro towels"],
+        essentials: [
+          { id: "t-backpack", name: "Waterproof Ergonomic 50L Trekking Backpack", price: 2199, rating: 4.8, reviews: 3400, brand: "Quechua", why: "Wide comfort waist belts minimizing shoulder stress.", desc: "Includes integrated high-visibility rain cover.", img: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=400&q=80" },
+          { id: "t-poles", name: "Lightweight Aluminum Trekking Poles (Pair)", price: 1299, rating: 4.7, reviews: 1800, brand: "Forclaz", why: "Provides stable traction and joint safety on trails.", desc: "Anti-shock springs with foam handles.", img: "https://images.unsplash.com/photo-1536746803623-ccd8751a0215?auto=format&fit=crop&w=400&q=80" },
+          { id: "t-bottle", name: "Milton Thermosteel Insulated Bottle (1L)", price: 699, rating: 4.9, reviews: 24200, brand: "Milton", why: "Double-wall vacuum keeping liquids warm in snow.", desc: "100% rust-proof food-grade steel.", img: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=400&q=80" }
+        ],
+        niceToHave: [
+          { id: "t-shoes", name: "Decathlon Anti-Slip Mountain Hiking Shoes", price: 3499, rating: 4.8, reviews: 4100, brand: "Quechua", why: "Deep rubber lugs grip mud and gravel paths safely.", desc: "Breathable waterproof membrane construction.", img: "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?auto=format&fit=crop&w=400&q=80" },
+          { id: "t-headlamp", name: "USB Rechargeable Waterproof LED Headlamp", price: 899, rating: 4.6, reviews: 2100, brand: "Generic", why: "Hands-free navigation for early morning summit walks.", desc: "5 lighting modes with red alert light.", img: "https://images.unsplash.com/photo-1508962914676-134849a727f0?auto=format&fit=crop&w=400&q=80" },
+          { id: "t-kit", name: "Compact Outdoor Emergency First Aid Kit", price: 450, rating: 4.7, reviews: 1500, brand: "CarePlus", why: "Includes bandages, antiseptics, and emergency blankets.", desc: "Ultralight ripstop nylon pouch.", img: "https://images.unsplash.com/photo-1603398938378-e54eab446dde?auto=format&fit=crop&w=400&q=80" },
+          { id: "t-towel", name: "Quick-Dry Microfiber Hiking Towel", price: 249, rating: 4.5, reviews: 980, brand: "Decathlon", why: "Absorbs 4x weight in water, dries in 15 minutes.", desc: "Antibacterial treat pack.", img: "https://images.unsplash.com/photo-1616627547584-bf28cee262db?auto=format&fit=crop&w=400&q=80" }
+        ]
+      },
+      office: {
+        label: "Home Office Setup",
+        confidence: "High",
+        essentialsTotal: 7748,
+        allTotal: 12444,
+        budgetPct: 52,
+        hiddenNeeds: ["Cable organizer sleeves", "Multi-port extension surge block", "Desk light"],
+        essentials: [
+          { id: "o-chair", name: "Ergonomic High-Back Office Chair", price: 4999, rating: 4.6, reviews: 5600, brand: "Green Soul", why: "Adjustable 3D armrests and back support preventing pain.", desc: "Breathable mesh back structure.", img: "https://images.unsplash.com/photo-1505797149-43b0069ec26b?auto=format&fit=crop&w=400&q=80" },
+          { id: "o-keyboard", name: "Logitech Wireless Quiet Keyboard & Mouse Combo", price: 1499, rating: 4.8, reviews: 19800, brand: "Logitech", why: "Lag-free 2.4GHz wireless connectivity.", desc: "Spill-proof keys with 2-year battery life.", img: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=400&q=80" },
+          { id: "o-lamp", name: "Philips LED Eye-Care Dimmable Desk Lamp", price: 1250, rating: 4.7, reviews: 2900, brand: "Philips", why: "Advanced diffusion panel preventing screen glare.", desc: "Includes integrated USB charging port.", img: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=400&q=80" }
+        ],
+        niceToHave: [
+          { id: "o-smartwatch", name: "Noise ColorFit Pro 3 Active Smartwatch", price: 2499, rating: 4.5, reviews: 5400, brand: "Noise", why: "Activity reminders prompts you to stand hourly.", desc: "HD screen with active heart tracking.", img: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=400&q=80" },
+          { id: "o-strip", name: "Lifelong 4-Way Extension Surge Protector", price: 599, rating: 4.6, reviews: 1200, brand: "Lifelong", why: "Connect and protect monitor + computer safely.", desc: "Includes 3 USB ports.", img: "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=400&q=80" },
+          { id: "o-cable", name: "Neoprene Cable Management Sleeve (2m)", price: 299, rating: 4.4, reviews: 850, brand: "CableMax", why: "Cleans up under-desk cables in one clean wrapper.", desc: "Cut-to-size zipper setup.", img: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=400&q=80" },
+          { id: "o-mousepad", name: "Extended Waterproof Felt Desk Mat", price: 1299, rating: 4.7, reviews: 3100, brand: "Oakywood", why: "Sleek protection for both keyboard and optical mice.", desc: "Felt-backed natural wool.", img: "https://images.unsplash.com/photo-1632292224971-0d45778b3002?auto=format&fit=crop&w=400&q=80" }
+        ]
+      },
+      hostel: {
+        label: "Dorm Hostel Setup",
+        confidence: "High",
+        essentialsTotal: 1398,
+        allTotal: 3793,
+        budgetPct: 28,
+        hiddenNeeds: ["Extension board", "Laundry bag", "Secure padlock"],
+        essentials: [
+          { id: "h-sheet", name: "Raymond Single Cotton Bedding Set", price: 599, rating: 4.6, reviews: 3400, brand: "Raymond", why: "Breathable organic cotton sheet set.", desc: "Fits standard single dorm beds.", img: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=400&q=80" },
+          { id: "h-board", name: "Syska 4-Way Extension Board", price: 449, rating: 4.7, reviews: 8500, brand: "Syska", why: "Gives extra sockets for charging laptops and phones.", desc: "Overload protection switcher.", img: "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=400&q=80" },
+          { id: "h-laundry", name: "Foldable Polyester Laundry Bag", price: 350, rating: 4.5, reviews: 2100, brand: "Deco", why: "Stands upright, folds flat under bed when empty.", desc: "Durable aluminum handles.", img: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=400&q=80" }
+        ],
+        niceToHave: [
+          { id: "h-charger", name: "Anker USB-C Braided Fast Cable (6ft)", price: 899, rating: 4.9, reviews: 15300, brand: "Anker", why: "Long cable reaches distant dorm sockets easily.", desc: "Reinforced braided exterior.", img: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=400&q=80" },
+          { id: "h-padlock", name: "Godrej Brass Padlock with 3 Keys", price: 299, rating: 4.7, reviews: 14200, brand: "Godrej", why: "Secures your personal locker room storage.", desc: "Triple-locking steel pin setup.", img: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=400&q=80" },
+          { id: "h-dryer", name: "Stainless Steel Foldable Clothes Dryer Rack", price: 999, rating: 4.4, reviews: 1200, brand: "AmazonBasics", why: "Space-saving line to air-dry towels inside.", desc: "Rust-resistant chrome steel.", img: "https://images.unsplash.com/photo-1616627547584-bf28cee262db?auto=format&fit=crop&w=400&q=80" },
+          { id: "h-fan", name: "Clip-On USB Portable Desk Fan", price: 498, rating: 4.5, reviews: 3100, brand: "Crompton", why: "Provides target breeze during hot hostel nights.", desc: "3 quiet speed settings.", img: "https://images.unsplash.com/photo-1618944847023-38aa001235f0?auto=format&fit=crop&w=400&q=80" }
+        ]
+      }
+    };
+
+    const EMERGENCY_PRODUCTS = {
+      baby: { name: "Pampers Baby Dry Diapers (Pack of 32)", price: 999, why: "Immediate leak prevention & 12h dry guarantee.", image_url: "pampers_diapers.png" },
+      firstaid: { name: "Pain Relief Ibuprofen Liquid Gels", price: 240, why: "Targets headaches in under 15 minutes.", image_url: "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?auto=format&fit=crop&w=400&q=80" },
+      tech: { name: "Anker USB-C Braided Fast Cable", price: 899, why: "60W delivery, extremely durable bend safety.", image_url: "https://images.unsplash.com/photo-1563770660941-20978e870e26?auto=format&fit=crop&w=400&q=80" },
+      baking: { name: "Nellie's Free-Range Large Eggs (1 doz)", price: 320, why: "Freshly staged organic eggs from local farm.", image_url: "https://images.unsplash.com/photo-1506976785307-8732e854ad03?auto=format&fit=crop&w=400&q=80" }
+    };
+
+    let activeCart = [];
+    let currentIntent = 'pasta';
+    let triageAnswers = {};
+    let isEmergency = false;
+
+    // Load initial layout
+    document.addEventListener("DOMContentLoaded", () => {
+      updateCartCount();
+      setupSwipeDrag('swipe-handle-emergency', () => triggerPurchaseSuccess());
+      setupSwipeDrag('swipe-handle-standard', () => triggerPurchaseSuccess());
+      initTriage(currentIntent);
+      animateCounters();
+      initPastOrders();
+      updateGeminiBadge();
+    });
+
+    // Toggle Emergency mode
+    function toggleEmergencyMode() {
+      isEmergency = !isEmergency;
+      const hero = document.getElementById('hero-search-section');
+      const results = document.getElementById('results-view-section');
+      const emergency = document.getElementById('emergency-mode-section');
+      const btn = document.getElementById('emergency-toggle-btn');
+      const stats = document.getElementById('landing-usage-stats');
+
+      if (isEmergency) {
+        hero.classList.add('hidden');
+        results.classList.add('hidden');
+        stats.classList.add('hidden');
+        emergency.classList.remove('hidden');
+        btn.innerHTML = `<i data-lucide="x" class="w-3.5 h-3.5"></i><span>Exit Emergency</span>`;
+        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-700 bg-slate-800 text-slate-400 text-xs font-extrabold hover:text-white transition-all font-sans";
+      } else {
+        hero.classList.remove('hidden');
+        stats.classList.remove('hidden');
+        emergency.classList.add('hidden');
+        changeEmergencyScenario();
+        btn.innerHTML = `<i data-lucide="shield-alert" class="w-3.5 h-3.5"></i><span>Emergency mode</span>`;
+        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-rose-600 bg-rose-500/10 text-rose-500 text-xs font-extrabold hover:bg-rose-500/20 transition-all animate-pulse font-sans";
+      }
+      lucide.createIcons();
+    }
+
+    function toggleBudgetInput() {
+      document.getElementById('budget-input-wrap').classList.toggle('hidden');
+    }
+
+    // Load products based on intent
+    function renderProducts(intentKey) {
+      currentIntent = intentKey;
+      const data = INTENT_DATABASE[intentKey];
+      
+      // Hide usage stats when showing result
+      document.getElementById('landing-usage-stats').classList.add('hidden');
+      document.getElementById('results-view-section').classList.remove('hidden');
+      initTriage(intentKey);
+
+      // Update text details
+      document.getElementById('display-intent-name').innerText = data.label;
+      document.getElementById('recognized-intent-label').innerText = data.label;
+      
+      // Update Budget details
+      document.getElementById('budget-essentials-cost').innerText = "₹" + data.essentialsTotal.toLocaleString('en-IN');
+      document.getElementById('budget-all-cost').innerText = "₹" + data.allTotal.toLocaleString('en-IN');
+      document.getElementById('budget-usage-pct').innerText = data.budgetPct + "%";
+      document.getElementById('budget-progress-bar').style.width = data.budgetPct + "%";
+
+      // Render Essentials
+      const essentialsContainer = document.getElementById('essential-cards-grid');
+      essentialsContainer.innerHTML = '';
+      data.essentials.forEach(p => {
+        const inCart = activeCart.some(item => item.id === p.id);
+        const btnHtml = inCart 
+          ? `<button class="w-full py-2.5 bg-green-100 border border-green-300 text-green-700 font-bold rounded-lg text-xs cursor-default">Added ✓</button>`
+          : `<button onclick="addItemToCart('${p.id}')" class="w-full py-2.5 bg-amazon-yellow hover:bg-yellow-400 text-slate-900 font-bold rounded-lg text-xs transition-colors">Add to Cart</button>`;
+
+        const ratingStars = '★'.repeat(Math.floor(p.rating)) + '☆'.repeat(5 - Math.floor(p.rating));
+        const card = document.createElement('div');
+        card.className = "bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-3 text-left shadow-sm fade-in";
+        card.setAttribute('onmouseenter', `speakText("${p.name.replace(/'/g, "\\'")}, Brand: ${p.brand}, Price: ${p.price} Rupees. Reason: ${p.why.replace(/'/g, "\\'")}")`);
+        card.innerHTML = `
+          <div class="relative">
+            <img src="${p.img}" alt="${p.name}" class="h-36 w-full object-cover rounded-lg">
+            <span class="absolute top-2 right-2 bg-emerald-600 text-white font-sans text-[8px] font-bold px-2 py-0.5 rounded">Essential</span>
+          </div>
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-[9px] bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 rounded font-black tracking-wider uppercase font-sans">${p.brand}</span>
+              <span class="text-[9px] text-blue-600 font-extrabold uppercase font-sans">prime</span>
+            </div>
+            <h4 class="font-bold text-xs text-slate-800 mt-2 line-clamp-2">${p.name}</h4>
+          </div>
+          <div class="flex items-center gap-1 text-amber-500 text-xs">${ratingStars} <span class="text-slate-400">(${p.reviews.toLocaleString('en-IN')})</span></div>
+          <p class="text-xl font-black text-slate-900 font-sans">₹${p.price.toLocaleString('en-IN')}</p>
+          
+          <div class="bg-amber-50 border border-amber-100 rounded-lg p-2.5 flex items-start gap-1.5">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5"></i>
+            <p class="text-[10px] text-amber-800 font-sans">${p.why}</p>
+          </div>
+          ${btnHtml}
+        `;
+        essentialsContainer.appendChild(card);
+      });
+
+      // Render Nice-To-Haves
+      const niceContainer = document.getElementById('nice-cards-grid');
+      niceContainer.innerHTML = '';
+      data.niceToHave.forEach(p => {
+        const inCart = activeCart.some(item => item.id === p.id);
+        const btnHtml = inCart 
+          ? `<button class="w-full py-2.5 bg-green-100 border border-green-300 text-green-700 font-bold rounded-lg text-xs cursor-default font-sans">Added ✓</button>`
+          : `<button onclick="addItemToCart('${p.id}')" class="w-full py-2.5 bg-amazon-yellow hover:bg-yellow-400 text-slate-900 font-bold rounded-lg text-xs transition-colors font-sans">Add to Cart</button>`;
+
+        const ratingStars = '★'.repeat(Math.floor(p.rating)) + '☆'.repeat(5 - Math.floor(p.rating));
+        const card = document.createElement('div');
+        card.className = "bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-3 text-left shadow-sm fade-in";
+        card.setAttribute('onmouseenter', `speakText("${p.name.replace(/'/g, "\\'")}, Brand: ${p.brand}, Price: ${p.price} Rupees. Reason: ${p.why.replace(/'/g, "\\'")}")`);
+        card.innerHTML = `
+          <div class="relative">
+            <img src="${p.img}" alt="${p.name}" class="h-36 w-full object-cover rounded-lg">
+            <span class="absolute top-2 right-2 bg-purple-500 text-white font-sans text-[8px] font-bold px-2 py-0.5 rounded font-sans">Nice-to-have</span>
+          </div>
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-[9px] bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 rounded font-black tracking-wider uppercase font-sans">${p.brand}</span>
+              <span class="text-[9px] text-blue-600 font-extrabold uppercase font-sans font-sans">prime</span>
+            </div>
+            <h4 class="font-bold text-xs text-slate-800 mt-2 line-clamp-2">${p.name}</h4>
+          </div>
+          <div class="flex items-center gap-1 text-amber-500 text-xs">${ratingStars} <span class="text-slate-400">(${p.reviews.toLocaleString('en-IN')})</span></div>
+          <p class="text-xl font-black text-slate-900 font-sans font-sans">₹${p.price.toLocaleString('en-IN')}</p>
+          
+          <div class="bg-amber-50 border border-amber-100 rounded-lg p-2.5 flex items-start gap-1.5">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5"></i>
+            <p class="text-[10px] text-amber-800 font-sans">${p.why}</p>
+          </div>
+          ${btnHtml}
+        `;
+        niceContainer.appendChild(card);
+      });
+
+      // Render hidden needs
+      const needsContainer = document.getElementById('hidden-needs-list');
+      needsContainer.innerHTML = '';
+      data.hiddenNeeds.forEach(need => {
+        const li = document.createElement('li');
+        li.className = "flex items-center gap-2 text-xs text-amber-900 font-sans";
+        li.innerHTML = `<span class="text-amazon-orange font-bold font-sans">✓</span> ${need}`;
+        needsContainer.appendChild(li);
+      });
+
+      // Smart cart upsell control
+      const upsell = document.getElementById('smart-cart-upsell');
+      if (intentKey === 'pasta' && !activeCart.some(i => i.id === 'sauce-1')) {
+        upsell.classList.remove('hidden');
+      } else {
+        upsell.classList.add('hidden');
+      }
+
+      lucide.createIcons();
+    }
+
+    // Apply suggestions prompts
+    function applyPrompt(text) {
+      document.getElementById('intent-input').value = text;
+      showAIProcessing(text);
+    }
+
+    // Standard searches submit
+    function handleSearchSubmit(e) {
+      if (e) e.preventDefault();
+      const val = document.getElementById('intent-input').value.trim();
+      if (!val) return;
+      showAIProcessing(val);
+    }
+
+    function resetSearch() {
+      document.getElementById('intent-input').value = '';
+      document.getElementById('results-view-section').classList.add('hidden');
+      document.getElementById('landing-usage-stats').classList.remove('hidden');
+    }
+
+    // Cart detailed operations
+    function toggleCart(show) {
+      const drawer = document.getElementById('cart-drawer');
+      if (show) {
+        drawer.classList.remove('hidden');
+        renderCartItems();
+      } else {
+        drawer.classList.add('hidden');
+      }
+    }
+
+    function addItemToCart(productId) {
+      let found = null;
+      Object.keys(INTENT_DATABASE).forEach(k => {
+        let item = INTENT_DATABASE[k].essentials.find(p => p.id === productId);
+        if (!item) item = INTENT_DATABASE[k].niceToHave.find(p => p.id === productId);
+        if (item) found = item;
+      });
+
+      if (found && !activeCart.some(i => i.id === productId)) {
+        activeCart.push(found);
+        showToast(`✅ Added ${found.name.substring(0, 30)}... to cart`, "success");
+      }
+      updateCartCount();
+      renderProducts(currentIntent);
+    }
+
+    function addSauceToCart() {
+      const sauce = INTENT_DATABASE.pasta.upsell;
+      if (!activeCart.some(i => i.id === sauce.id)) {
+        activeCart.push({
+          id: sauce.id,
+          name: sauce.name,
+          price: sauce.price,
+          img: sauce.img
+        });
+        showToast(`🍝 Added ${sauce.name} (Smart Upsell) to cart`, "success");
+      }
+      document.getElementById('smart-cart-upsell').classList.add('hidden');
+      updateCartCount();
+      renderCartItems();
+    }
+
+    function removeCartItem(id) {
+      const item = activeCart.find(i => i.id === id);
+      activeCart = activeCart.filter(i => i.id !== id);
+      if (item) {
+        showToast(`🗑️ Removed ${item.name.substring(0, 30)}... from cart`, "info");
+      }
+      updateCartCount();
+      renderCartItems();
+      renderProducts(currentIntent);
+    }
+
+    function updateCartCount() {
+      const count = activeCart.length;
+      document.getElementById('cart-count').innerText = count;
+      document.getElementById('cart-badge').innerText = count;
+    }
+
+    function renderCartItems() {
+      const container = document.getElementById('cart-items-list');
+      container.innerHTML = '';
+
+      if (activeCart.length === 0) {
+        container.innerHTML = `<p class="text-slate-400 text-sm text-center py-8 font-sans">Your cart is empty.</p>`;
+        document.getElementById('cart-subtotal').innerText = "₹0";
+        return;
+      }
+
+      let subtotal = 0;
+      activeCart.forEach(item => {
+        subtotal += item.price;
+        const div = document.createElement('div');
+        div.className = "flex items-start gap-3 bg-gray-50 rounded-lg p-3 text-left text-slate-800";
+        div.innerHTML = `
+          <span class="text-2xl shrink-0 font-sans">📦</span>
+          <div class="flex-grow min-w-0 font-sans">
+            <p class="text-sm font-semibold text-gray-800 line-clamp-2">${item.name}</p>
+            <p class="text-orange-600 font-bold mt-1">₹${item.price.toLocaleString('en-IN')}</p>
+          </div>
+          <button onclick="removeCartItem('${item.id}')" class="text-gray-400 hover:text-red-500 shrink-0">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById('cart-subtotal').innerText = "₹" + subtotal.toLocaleString('en-IN');
+      
+      const hasSpaghetti = activeCart.some(i => i.id === "spag-1");
+      const hasSauce = activeCart.some(i => i.id === "sauce-1");
+      const upsell = document.getElementById('smart-cart-upsell');
+      if (hasSpaghetti && !hasSauce) {
+        upsell.classList.remove('hidden');
+      } else {
+        upsell.classList.add('hidden');
+      }
+      
+      lucide.createIcons();
+    }
+
+    function addAllToCart() {
+      const data = INTENT_DATABASE[currentIntent];
+      let addedCount = 0;
+      data.essentials.forEach(p => {
+        if (!activeCart.some(i => i.id === p.id)) {
+          activeCart.push(p);
+          addedCount++;
+        }
+      });
+      data.niceToHave.forEach(p => {
+        if (!activeCart.some(i => i.id === p.id)) {
+          activeCart.push(p);
+          addedCount++;
+        }
+      });
+      if (addedCount > 0) {
+        showToast(`🛍️ Added all ${addedCount} items to cart!`, "success");
+      }
+      updateCartCount();
+      renderProducts(currentIntent);
+    }
+
+    const ALTERNATIVE_EMERGENCY_PRODUCTS = {
+      baby: { name: "Huggies Wonder Pants M Size (Pack of 42)", price: 1250, why: "Alternative choice. Premium active stretch fit, 12h absorption with anti-rash lock layer.", image_url: "huggies_diapers.png" },
+      firstaid: { name: "Crocin Fast Pain Relief Tablets (Pack of 15)", price: 180, why: "Alternative choice. Paracetamol formulation for fast pain and fever relief.", image_url: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80" },
+      tech: { name: "Anker PowerPort III 20W Fast Wall Adapter", price: 1499, why: "Alternative choice. Fast wall adapter to restore device power in minutes.", image_url: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=400&q=80" },
+      baking: { name: "Amul Salted Gourmet Butter (500g)", price: 275, why: "Alternative choice. Pure milk fat butter essential for baking recipes.", image_url: "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=400&q=80" }
+    };
+
+    let emergencyQty = 1;
+    let isShowingAlternative = false;
+    let activeEmergencyType = null;
+
+    // Emergency Category Resolver
+    function selectEmergency(type) {
+      activeEmergencyType = type;
+      emergencyQty = 1;
+      isShowingAlternative = false;
+      document.getElementById('emergency-qty').innerText = emergencyQty;
+
+      // Hide category selector and show scanning overlay
+      document.getElementById('emergency-grid-wrap').classList.add('hidden');
+      document.getElementById('emergency-scanning-state').classList.remove('hidden');
+
+      setTimeout(() => {
+        const p = EMERGENCY_PRODUCTS[type];
+        document.getElementById('e-prod-img').src = p.image_url;
+        document.getElementById('e-prod-name').innerText = p.name;
+        document.getElementById('e-prod-why').innerText = p.why;
+        document.getElementById('e-prod-price').innerText = "₹" + p.price.toLocaleString('en-IN');
+        document.getElementById('e-prod-brand').innerText = type === 'baby' ? 'Pampers' : type === 'firstaid' ? 'Advil' : type === 'tech' ? 'Anker' : 'Nellie\'s';
+
+        // Hide scanning overlay and show resolution details
+        document.getElementById('emergency-scanning-state').classList.add('hidden');
+        document.getElementById('emergency-resolution').classList.remove('hidden');
+        lucide.createIcons();
+      }, 1200);
+    }
+
+    function updateEmergencyQty(val) {
+      emergencyQty += val;
+      if (emergencyQty < 1) emergencyQty = 1;
+      document.getElementById('emergency-qty').innerText = emergencyQty;
+      
+      const source = isShowingAlternative ? ALTERNATIVE_EMERGENCY_PRODUCTS : EMERGENCY_PRODUCTS;
+      const p = source[activeEmergencyType];
+      const currentPrice = p.price * emergencyQty;
+      document.getElementById('e-prod-price').innerText = "₹" + currentPrice.toLocaleString('en-IN');
+    }
+
+    function cycleAlternativeScenario() {
+      isShowingAlternative = !isShowingAlternative;
+      const source = isShowingAlternative ? ALTERNATIVE_EMERGENCY_PRODUCTS : EMERGENCY_PRODUCTS;
+      const p = source[activeEmergencyType];
+      
+      document.getElementById('e-prod-img').src = p.image_url;
+      document.getElementById('e-prod-name').innerText = p.name;
+      document.getElementById('e-prod-why').innerText = p.why;
+      document.getElementById('e-prod-brand').innerText = isShowingAlternative ? (activeEmergencyType === 'baby' ? 'Huggies' : activeEmergencyType === 'firstaid' ? 'Crocin' : activeEmergencyType === 'tech' ? 'Anker' : 'Amul') : (activeEmergencyType === 'baby' ? 'Pampers' : activeEmergencyType === 'firstaid' ? 'Advil' : activeEmergencyType === 'tech' ? 'Anker' : 'Nellie\'s');
+      
+      const currentPrice = p.price * emergencyQty;
+      document.getElementById('e-prod-price').innerText = "₹" + currentPrice.toLocaleString('en-IN');
+    }
+
+    function changeEmergencyScenario() {
+      document.getElementById('emergency-grid-wrap').classList.remove('hidden');
+      document.getElementById('emergency-resolution').classList.add('hidden');
+      document.getElementById('emergency-scanning-state').classList.add('hidden');
+    }
+
+    const TRIAGE_STEPS = {
+      pasta: [
+        {
+          q: "How many people are you cooking for?",
+          options: ["1-2 People", "3-5 People", "6+ Large Group"]
+        },
+        {
+          q: "Do you have any dietary restrictions?",
+          options: ["Standard / Classic", "Gluten-Free", "Organic Only"]
+        },
+        {
+          q: "Budget priority?",
+          options: ["Value Pack", "Gourmet / Premium"]
+        }
+      ],
+      party: [
+        {
+          q: "Who is the birthday party for?",
+          options: ["Kids Birthday", "Adult Gathering", "Office Party"]
+        },
+        {
+          q: "What is the party setting?",
+          options: ["Cozy Indoor", "Backyard Outdoor", "Loud Party Hall"]
+        },
+        {
+          q: "Budget priority?",
+          options: ["Budget-friendly", "Premium / Extravagant"]
+        }
+      ],
+      trek: [
+        {
+          q: "What is the duration of the trek?",
+          options: ["Short Weekend (1-3 Days)", "Long Expedition (5-10 Days)"]
+        },
+        {
+          q: "What season is the trek planned for?",
+          options: ["Mild Summer", "Monsoon / Rainy", "Freezing Winter"]
+        },
+        {
+          q: "Experience level?",
+          options: ["Beginner Trails", "Advanced Technical Climbs"]
+        }
+      ],
+      hostel: [
+        {
+          q: "What room layout are you in?",
+          options: ["Single Room", "Shared Dorm (2-4 pax)", "Large Suite"]
+        },
+        {
+          q: "What is your primary climate concern?",
+          options: ["Hot & Humid", "Cold & Drafty", "Dry / Air-Conditioned"]
+        },
+        {
+          q: "Budget priority?",
+          options: ["Standard Essentials", "Premium Comforts"]
+        }
+      ],
+      baby: [
+        {
+          q: "Who is the baby diaper for?",
+          options: ["Newborn (< 5 kg)", "Infant (5 - 10 kg)", "Toddler (> 10 kg)"]
+        },
+        {
+          q: "Any skin sensitivity or preference?",
+          options: ["Sensitive Skin", "Standard Protection"]
+        },
+        {
+          q: "What is your budget priority?",
+          options: ["Best Value Pack", "Premium Eco-Friendly"]
+        }
+      ]
+    };
+
+    let triageStep = 1;
+
+    function initTriage(intentKey) {
+      triageAnswers = {};
+      triageStep = 1;
+      const steps = TRIAGE_STEPS[intentKey] || TRIAGE_STEPS['baby'];
+      
+      document.getElementById('triage-result').classList.add('hidden');
+      renderTriageStep(steps, 1);
+    }
+
+    function renderTriageStep(steps, stepNum) {
+      const stepData = steps[stepNum - 1];
+      const container = document.getElementById('triage-step-content');
+      container.classList.remove('hidden');
+
+      if (!stepData) return;
+
+      let optionsHtml = '';
+      stepData.options.forEach(opt => {
+        optionsHtml += `<button onclick="selectTriage(${stepNum}, '${opt.replace(/'/g, "\\'")}')" class="w-full text-left p-3 border border-slate-100 hover:border-orange-500 hover:bg-orange-50/20 rounded-xl text-[11px] text-slate-600 font-semibold font-sans font-sans">${opt}</button>`;
+      });
+
+      container.innerHTML = `
+        <span class="text-[9px] text-orange-500 font-extrabold uppercase tracking-widest font-sans font-sans">Step ${stepNum} of 3</span>
+        <h4 class="text-xs font-bold text-slate-700 font-sans font-sans">${stepData.q}</h4>
+        <div class="flex flex-col gap-2">
+          ${optionsHtml}
+        </div>
+      `;
+    }
+
+    function selectTriage(stepNum, answer) {
+      triageAnswers[stepNum] = answer;
+      const steps = TRIAGE_STEPS[currentIntent] || TRIAGE_STEPS['baby'];
+      
+      if (stepNum < steps.length) {
+        triageStep = stepNum + 1;
+        renderTriageStep(steps, triageStep);
+      } else {
+        document.getElementById('triage-step-content').classList.add('hidden');
+
+        let name = "";
+        let price = "";
+        let emoji = "🤖";
+        let details = Object.values(triageAnswers).join(' • ');
+
+        if (currentIntent === 'pasta') {
+          emoji = "🍝";
+          const isGlutenFree = triageAnswers[2]?.includes('Gluten-Free');
+          const isGourmet = triageAnswers[3]?.includes('Gourmet');
+          if (isGlutenFree) {
+            name = isGourmet ? "Jovial Organic Gluten-Free Brown Rice Spaghetti" : "Barilla Gluten-Free Penne Pasta";
+            price = isGourmet ? "₹450" : "₹250";
+          } else {
+            name = isGourmet ? "Artisanal Bronze-Cut Spaghetti (De Cecco)" : "Standard Durum Wheat Pasta Pack";
+            price = isGourmet ? "₹350" : "₹180";
+          }
+        } else if (currentIntent === 'party') {
+          emoji = "🎉";
+          const isKids = triageAnswers[1]?.includes('Kids');
+          const isPremium = triageAnswers[3]?.includes('Premium');
+          if (isKids) {
+            name = isPremium ? "JBL Go 3 Portable Speaker & Balloon Pack" : "Helium Chrome Balloons & Paper Plates Combo";
+            price = isPremium ? "₹2,798" : "₹498";
+          } else {
+            name = isPremium ? "Philips LED Fairy Lights & Cadbury celebrations pack" : "Lay's Party Pack + Coca-Cola Zero Sugar (12 cans)";
+            price = isPremium ? "₹749" : "₹630";
+          }
+        } else if (currentIntent === 'trek') {
+          emoji = "🏔️";
+          const isLong = triageAnswers[1]?.includes('Long');
+          const isWinter = triageAnswers[2]?.includes('Winter');
+          if (isWinter) {
+            name = isLong ? "Quechua Waterproof 50L Backpack + Milton Insulated Thermosteel" : "Milton Insulated Bottle + Hand Warmers Kit";
+            price = isLong ? "₹2,898" : "₹999";
+          } else {
+            name = isLong ? "Quechua 50L Backpack & Forclaz Trekking Poles" : "Forclaz Lightweight Trekking Poles (Pair)";
+            price = isLong ? "₹3,498" : "₹1,299";
+          }
+        } else if (currentIntent === 'hostel') {
+          emoji = "🏢";
+          const isShared = triageAnswers[1]?.includes('Shared');
+          const isPremium = triageAnswers[3]?.includes('Premium');
+          if (isShared) {
+            name = isPremium ? "Syska 4-Way Extension Board & Godrej Brass Padlock" : "Godrej Heavy Duty Locker Padlock";
+            price = isPremium ? "₹748" : "₹299";
+          } else {
+            name = isPremium ? "Raymond Cotton Bedding Set & Clip-On Desk Fan" : "Raymond Single Bedding Set";
+            price = isPremium ? "₹1,097" : "₹599";
+          }
+        } else {
+          emoji = "🍼";
+          const isInfant = triageAnswers[1]?.includes('Infant');
+          const isSensitive = triageAnswers[2]?.includes('Sensitive') || triageAnswers[2]?.includes('Organic');
+          const isPremium = triageAnswers[3]?.includes('Premium');
+
+          if (isInfant) {
+            if (isSensitive) {
+              name = isPremium ? "Huggies Organic Cotton Infant Diapers (M)" : "Pampers Pure Protection Infant Pack (M)";
+              price = isPremium ? "₹1,399" : "₹1,250";
+            } else {
+              name = isPremium ? "Huggies Wonder Pants M Size (Pack of 42)" : "MamyPoko Pants Standard Infant (M)";
+              price = isPremium ? "₹1,250" : "₹799";
+            }
+          } else {
+            if (isSensitive) {
+              name = isPremium ? "Pampers Pure Protection Newborn (XS)" : "Huggies Nature Care Newborn Pack (XS)";
+              price = isPremium ? "₹1,150" : "₹950";
+            } else {
+              name = isPremium ? "Pampers Baby Dry Newborn (XS)" : "MamyPoko Pants Standard Newborn (XS)";
+              price = isPremium ? "₹899" : "₹699";
+            }
+          }
+        }
+
+        document.getElementById('triage-rec-emoji').innerText = emoji;
+        document.getElementById('triage-rec-name').innerText = name;
+        document.getElementById('triage-rec-price').innerText = price;
+        document.getElementById('triage-rec-details').innerText = details;
+        document.getElementById('triage-result').classList.remove('hidden');
+      }
+    }
+
+    function resetTriage() {
+      initTriage(currentIntent);
+    }
+
+    // Swipe Buy tracks gestures
+    function setupSwipeDrag(id, onConfirm) {
+      const handle = document.getElementById(id);
+      if (!handle) return;
+      const track = handle.parentElement;
+
+      let startX = 0;
+      let isDragging = false;
+
+      function onStart(e) {
+        startX = e.clientX || e.touches[0].clientX;
+        isDragging = true;
+        handle.style.transition = 'none';
+      }
+
+      function onMove(e) {
+        if (!isDragging) return;
+        const maxDrag = track.clientWidth - handle.clientWidth - 8;
+        const currentX = e.clientX || e.touches[0].clientX;
+        let deltaX = currentX - startX;
+        
+        if (deltaX < 0) deltaX = 0;
+        if (deltaX > maxDrag) deltaX = maxDrag;
+
+        handle.style.transform = `translateX(${deltaX}px)`;
+
+        if (deltaX >= maxDrag * 0.9) {
+          isDragging = false;
+          handle.style.transform = `translateX(${maxDrag}px)`;
+          onConfirm();
+          setTimeout(() => {
+            handle.style.transform = 'translateX(0px)';
+          }, 1000);
+        }
+      }
+
+      function onEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+        handle.style.transition = 'transform 0.25s ease-out';
+        handle.style.transform = 'translateX(0px)';
+      }
+
+      handle.addEventListener('mousedown', onStart);
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onEnd);
+      
+      handle.addEventListener('touchstart', onStart);
+      document.addEventListener('touchmove', onMove);
+      document.addEventListener('touchend', onEnd);
+    }
+
+    function triggerPurchaseSuccess() {
+      toggleCart(false);
+
+      // Trigger Confetti!
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 150,
+          spread: 85,
+          origin: { y: 0.6 }
+        });
+      }
+
+      // Save to Simulated past orders
+      saveCurrentOrderToHistory();
+
+      showToast("🚀 Order placed successfully! Rider dispatched.", "success");
+      triggerLiveTracking();
+    }
+
+    // 🎙️ Voice Search (Web Speech API)
+    let recognition;
+    function startVoiceSearch() {
+      const btn = document.getElementById('voice-search-btn');
+      const input = document.getElementById('intent-input');
+      
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showToast("❌ Speech recognition is not supported in this browser.", "error");
+        return;
+      }
+
+      if (recognition) {
+        recognition.stop();
+        return;
+      }
+
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = 'en-IN';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        btn.classList.add('text-rose-500', 'animate-pulse');
+        btn.innerHTML = `<i data-lucide="mic-off" class="w-5 h-5"></i>`;
+        lucide.createIcons();
+        input.placeholder = "Listening... Speak your shopping goal";
+        showToast("🎙️ Listening... Speak your shopping intent", "info");
+      };
+
+      recognition.onresult = (event) => {
+        const result = event.results[0][0].transcript;
+        input.value = result;
+        showToast("💡 Voice input received!", "success");
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        showToast("❌ Speech recognition error: " + event.error, "error");
+      };
+
+      recognition.onend = () => {
+        btn.classList.remove('text-rose-500', 'animate-pulse');
+        btn.innerHTML = `<i data-lucide="mic" class="w-5 h-5"></i>`;
+        lucide.createIcons();
+        input.placeholder = "What are you planning? e.g. Planning a birthday party for 20 people...";
+        recognition = null;
+      };
+
+      recognition.start();
+    }
+
+    // ♿ Accessibility SOS Controls
+    let a11yPanelOpen = false;
+    let screenReaderEnabled = false;
+
+    function toggleA11yPanelToggle() {
+      toggleA11yPanel(!a11yPanelOpen);
+    }
+
+    // Explicitly define toggleA11yPanel to satisfy layout clicks
+    function toggleA11yPanel(show) {
+      a11yPanelOpen = show;
+      const panel = document.getElementById('a11y-panel');
+      if (show) {
+        panel.classList.remove('hidden');
+        showToast("♿ Accessibility Options Opened", "info");
+      } else {
+        panel.classList.add('hidden');
+      }
+    }
+
+    function toggleTextZoom() {
+      const active = document.getElementById('a11y-text-zoom').checked;
+      if (active) {
+        document.body.classList.add('a11y-text-zoom');
+        showToast("🔎 Text Zoom Enabled", "info");
+      } else {
+        document.body.classList.remove('a11y-text-zoom');
+        showToast("🔎 Text Zoom Disabled", "info");
+      }
+    }
+
+    function toggleHighContrast() {
+      const active = document.getElementById('a11y-high-contrast').checked;
+      if (active) {
+        document.body.classList.add('a11y-high-contrast');
+        showToast("🌗 High Contrast Enabled", "info");
+      } else {
+        document.body.classList.remove('a11y-high-contrast');
+        showToast("🌗 High Contrast Disabled", "info");
+      }
+    }
+
+    function toggleScreenReader() {
+      screenReaderEnabled = document.getElementById('a11y-screen-reader').checked;
+      if (screenReaderEnabled) {
+        showToast("🔊 Screen Reader Enabled. Hover cards to read.", "success");
+        speakText("Screen reader assistance enabled. Hover over items to hear descriptions.");
+      } else {
+        window.speechSynthesis.cancel();
+        showToast("🔊 Screen Reader Disabled", "info");
+      }
+    }
+
+    function speakText(text) {
+      if (!screenReaderEnabled) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // 🤖 AI Processing Overlay & Custom Intent logic
+    let currentCustomIntent = "";
+    function showAIProcessing(userInput) {
+      currentCustomIntent = userInput;
+      document.getElementById('landing-usage-stats').classList.add('hidden');
+      document.getElementById('results-view-section').classList.add('hidden');
+      document.getElementById('custom-intent-section').classList.add('hidden');
+      
+      const overlay = document.getElementById('ai-processing-overlay');
+      overlay.classList.remove('hidden');
+
+      const log1 = document.getElementById('ai-log-1');
+      const log2 = document.getElementById('ai-log-2');
+      const log3 = document.getElementById('ai-log-3');
+      const stepText = document.getElementById('ai-loading-step');
+
+      log1.classList.add('hidden');
+      log2.classList.add('hidden');
+      log3.classList.add('hidden');
+      stepText.innerText = "Parsing query tokens...";
+
+      let processingCompleted = false;
+
+      // Trigger parallel API fetch/routing immediately!
+      const routingPromise = processIntentRouting(userInput);
+
+      // Fast animation log transitions (300ms intervals)
+      setTimeout(() => {
+        if (!processingCompleted) {
+          log1.classList.remove('hidden');
+          stepText.innerText = "Checking micro-fulfillment warehouse stock...";
+        }
+      }, 300);
+
+      setTimeout(() => {
+        if (!processingCompleted) {
+          log2.classList.remove('hidden');
+          stepText.innerText = "Optimizing budget bounds...";
+        }
+      }, 600);
+
+      setTimeout(() => {
+        if (!processingCompleted) {
+          log3.classList.remove('hidden');
+          stepText.innerText = "Synthesizing cart items...";
+        }
+      }, 900);
+
+      // Extra logs during longer API generation latency
+      setTimeout(() => {
+        if (!processingCompleted && !overlay.classList.contains('hidden')) {
+          stepText.innerText = "Structuring custom recommendations...";
+        }
+      }, 3000);
+
+      setTimeout(() => {
+        if (!processingCompleted && !overlay.classList.contains('hidden')) {
+          stepText.innerText = "Optimizing product categories...";
+        }
+      }, 6000);
+
+      // Safety timer to force hide overlay after 8.5 seconds if still loading
+      const safetyTimeoutId = setTimeout(() => {
+        if (!processingCompleted) {
+          processingCompleted = true;
+          console.warn("AI intent processing exceeded safety limit. Forcing fallback.");
+          overlay.classList.add('hidden');
+          showToast("⚠️ Connection took too long. Loaded local fallback.", "info");
+          
+          const val = userInput.toLowerCase();
+          let matchedKey = null;
+          if (val.includes('party') || val.includes('birthday') || val.includes('celebrat') || val.includes('gather')) {
+            matchedKey = 'party';
+          } else if (val.includes('trek') || val.includes('himalayan') || val.includes('climb') || val.includes('camp') || val.includes('mountain') || val.includes('hike')) {
+            matchedKey = 'trek';
+          } else if (val.includes('office') || val.includes('wfh') || val.includes('desk') || val.includes('work') || val.includes('study')) {
+            matchedKey = 'office';
+          } else if (val.includes('hostel') || val.includes('dorm') || val.includes('college') || val.includes('roommate') || val.includes('move')) {
+            matchedKey = 'hostel';
+          } else {
+            matchedKey = 'pasta'; // fallback
+          }
+          renderProducts(matchedKey);
+        }
+      }, 8500);
+
+      // Resolve once both the minimum animation time (1200ms) and the API query have completed
+      Promise.all([
+        routingPromise,
+        new Promise(resolve => setTimeout(resolve, 1200))
+      ]).then(() => {
+        if (!processingCompleted) {
+          processingCompleted = true;
+          clearTimeout(safetyTimeoutId);
+          overlay.classList.add('hidden');
+        }
+      }).catch((err) => {
+        if (!processingCompleted) {
+          processingCompleted = true;
+          clearTimeout(safetyTimeoutId);
+          console.error("Intent processing failed:", err);
+          overlay.classList.add('hidden');
+          
+          // Fallback to local match immediately on error
+          const val = userInput.toLowerCase();
+          let matchedKey = 'pasta';
+          if (val.includes('party') || val.includes('birthday') || val.includes('celebrat') || val.includes('gather')) matchedKey = 'party';
+          else if (val.includes('trek') || val.includes('himalayan') || val.includes('climb') || val.includes('camp') || val.includes('mountain') || val.includes('hike')) matchedKey = 'trek';
+          else if (val.includes('office') || val.includes('wfh') || val.includes('desk') || val.includes('work') || val.includes('study')) matchedKey = 'office';
+          else if (val.includes('hostel') || val.includes('dorm') || val.includes('college') || val.includes('roommate') || val.includes('move')) matchedKey = 'hostel';
+          renderProducts(matchedKey);
+          showToast("⚠️ API error. Loaded local fallback.", "info");
+        }
+      });
+    }
+
+    async function processIntentRouting(userInput) {
+      const budgetVal = document.getElementById('budget-amount').value || "";
+      const hasKey = !!(localStorage.getItem('gemini_api_key') || "AIzaSyD8AZUAu1nWhaTlP15SGSNBjjX77VuRAGY");
+      
+      if (hasKey) {
+        showToast("🧠 Querying live Gemini AI...", "info");
+        const apiData = await fetchGeminiIntent(userInput, budgetVal);
+        if (apiData) {
+          const tempKey = "dynamic_" + Date.now();
+          INTENT_DATABASE[tempKey] = apiData;
+          renderProducts(tempKey);
+          showToast(`🎯 Live Gemini cart generated!`, "success");
+          return;
+        }
+      }
+
+      const val = userInput.toLowerCase();
+      let matchedKey = null;
+
+      if (val.includes('party') || val.includes('birthday') || val.includes('celebrat') || val.includes('gather')) {
+        matchedKey = 'party';
+      } else if (val.includes('trek') || val.includes('himalayan') || val.includes('climb') || val.includes('camp') || val.includes('mountain') || val.includes('hike')) {
+        matchedKey = 'trek';
+      } else if (val.includes('office') || val.includes('wfh') || val.includes('desk') || val.includes('work') || val.includes('study')) {
+        matchedKey = 'office';
+      } else if (val.includes('hostel') || val.includes('dorm') || val.includes('college') || val.includes('roommate') || val.includes('move')) {
+        matchedKey = 'hostel';
+      } else if (val.includes('pasta') || val.includes('cook') || val.includes('dinner') || val.includes('spaghetti') || val.includes('food') || val.includes('eat')) {
+        matchedKey = 'pasta';
+      }
+
+      if (matchedKey) {
+        renderProducts(matchedKey);
+        showToast(`🤖 matched intent: "${matchedKey.toUpperCase()}"`, "success");
+      } else {
+        document.getElementById('custom-intent-text').innerText = userInput;
+        document.getElementById('custom-intent-section').classList.remove('hidden');
+        showToast("🔍 Custom intent detected", "info");
+      }
+    }
+
+    function submitCustomIntentDetails() {
+      const scale = document.getElementById('custom-scale').value.toLowerCase();
+      const details = document.getElementById('custom-details').value.toLowerCase();
+      const combined = scale + " " + details + " " + currentCustomIntent.toLowerCase();
+
+      let matchedKey = 'hostel'; // default fallback instead of pasta
+      if (combined.includes('party') || combined.includes('birthday') || combined.includes('celebrat') || combined.includes('gather')) {
+        matchedKey = 'party';
+      } else if (combined.includes('trek') || combined.includes('himalayan') || combined.includes('climb') || combined.includes('camp') || combined.includes('mountain') || combined.includes('hike')) {
+        matchedKey = 'trek';
+      } else if (combined.includes('office') || combined.includes('wfh') || combined.includes('desk') || combined.includes('work') || combined.includes('study')) {
+        matchedKey = 'office';
+      } else if (combined.includes('pasta') || combined.includes('cook') || combined.includes('dinner') || combined.includes('spaghetti') || combined.includes('food') || combined.includes('eat')) {
+        matchedKey = 'pasta';
+      }
+
+      document.getElementById('custom-intent-section').classList.add('hidden');
+      
+      const overlay = document.getElementById('ai-processing-overlay');
+      overlay.classList.remove('hidden');
+      document.getElementById('ai-loading-step').innerText = "Synthesizing custom parameters...";
+      
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        renderProducts(matchedKey);
+        
+        const displayLabel = document.getElementById('display-intent-name');
+        displayLabel.innerHTML = `Custom: "${currentCustomIntent}" <span class="text-xs text-orange-500 font-normal block mt-1">(AI Smart-Adapted from ${INTENT_DATABASE[matchedKey].label})</span>`;
+        
+        showToast("🎯 Custom cart synthesized!", "success");
+      }, 1500);
+    }
+
+    // 🔄 Simulated Order History and Smart Reorder
+    const PAST_ORDERS_DB = [
+      {
+        id: "order-101",
+        date: "2 days ago",
+        intent: "party",
+        labelText: "Birthday Party (5 Pax)",
+        items: ["Premium Paper Plates", "Classic Potato Chips", "Cadbury Celebrations Chocolate"]
+      },
+      {
+        id: "order-102",
+        date: "1 week ago",
+        intent: "pasta",
+        labelText: "Pasta Gourmet Dinner",
+        items: ["Artisanal Bronze-Cut Spaghetti", "Grated Parmesan Cheese", "Organic Garlic Bulbs"]
+      }
+    ];
+
+    function initPastOrders() {
+      if (!localStorage.getItem('intent_past_orders')) {
+        localStorage.setItem('intent_past_orders', JSON.stringify(PAST_ORDERS_DB));
+      }
+      renderPastOrders();
+    }
+
+    function renderPastOrders() {
+      const orders = JSON.parse(localStorage.getItem('intent_past_orders') || '[]');
+      
+      // Render in sidebar
+      const sidebarContainer = document.getElementById('past-orders-list');
+      if (sidebarContainer) {
+        sidebarContainer.innerHTML = '';
+        if (orders.length === 0) {
+          sidebarContainer.innerHTML = `<p class="text-slate-400 text-[11px] font-sans">No order history found.</p>`;
+        } else {
+          orders.forEach(order => {
+            const div = document.createElement('div');
+            div.className = "bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 text-left";
+            div.innerHTML = `
+              <div class="flex justify-between items-center">
+                <span class="text-[10px] font-bold text-slate-700">${order.labelText}</span>
+                <span class="text-[9px] text-slate-400 font-sans">${order.date}</span>
+              </div>
+              <p class="text-[9px] text-slate-500 line-clamp-1">${order.items.join(', ')}</p>
+              <div class="flex gap-2 pt-1">
+                <button onclick="reorderPast('${order.intent}', true)" class="flex-grow py-1 bg-amazon-orange hover:bg-orange-500 text-slate-950 font-bold rounded text-[9px] transition-colors font-sans">
+                  Quick Buy
+                </button>
+                <button onclick="reorderPast('${order.intent}', false)" class="flex-grow py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded text-[9px] transition-colors font-sans">
+                  Edit Cart
+                </button>
+              </div>
+            `;
+            sidebarContainer.appendChild(div);
+          });
+        }
+      }
+
+      // Render on landing page
+      const landingContainer = document.getElementById('landing-past-orders-list');
+      const landingSection = document.getElementById('landing-past-orders');
+      if (landingContainer && landingSection) {
+        landingContainer.innerHTML = '';
+        if (orders.length > 0) {
+          landingSection.classList.remove('hidden');
+          orders.forEach(order => {
+            const btn = document.createElement('button');
+            btn.onclick = () => reorderPast(order.intent, false);
+            btn.className = "text-xs bg-white/10 hover:bg-white/20 hover:border-amazon-orange text-white px-4 py-2 rounded-full transition-all border border-white/5 font-sans flex items-center gap-1.5";
+            btn.innerHTML = `<i data-lucide="history" class="w-3 h-3 text-amazon-orange"></i> <span>Reorder ${order.labelText}</span>`;
+            landingContainer.appendChild(btn);
+          });
+          lucide.createIcons();
+        } else {
+          landingSection.classList.add('hidden');
+        }
+      }
+    }
+
+    function reorderPast(intentKey, instantBuy) {
+      if (instantBuy) {
+        const data = INTENT_DATABASE[intentKey];
+        activeCart = [];
+        data.essentials.forEach(p => activeCart.push(p));
+        updateCartCount();
+        showToast(`🚀 Order simulated for ${data.label}!`, "success");
+        triggerPurchaseSuccess();
+      } else {
+        renderProducts(intentKey);
+        addAllToCart();
+        showToast(`🛒 Pre-filled cart with ${INTENT_DATABASE[intentKey].label}!`, "info");
+      }
+    }
+
+    function saveCurrentOrderToHistory() {
+      const orders = JSON.parse(localStorage.getItem('intent_past_orders') || '[]');
+      const data = INTENT_DATABASE[currentIntent];
+      
+      const newOrder = {
+        id: "order-" + Math.floor(Math.random() * 1000 + 200),
+        date: "Just now",
+        intent: currentIntent,
+        labelText: data.label + " (Refill)",
+        items: activeCart.map(item => item.name).slice(0, 3)
+      };
+
+      orders.unshift(newOrder);
+      if (orders.length > 3) orders.pop();
+      
+      localStorage.setItem('intent_past_orders', JSON.stringify(orders));
+      renderPastOrders();
+    }
+
+    // 📊 Animated Counter Metrics dashboard
+    function animateCounters() {
+      const counters = document.querySelectorAll('.counter');
+      counters.forEach(counter => {
+        counter.innerText = '0';
+        const target = +counter.getAttribute('data-target');
+        const increment = target / 50;
+        
+        let count = 0;
+        const updateCount = () => {
+          if (count < target) {
+            count += increment;
+            counter.innerText = Math.ceil(count);
+            setTimeout(updateCount, 25);
+          } else {
+            counter.innerText = target;
+          }
+        };
+        updateCount();
+      });
+    }
+
+    // 🔔 Elegant Toast Notification System
+    function showToast(message, type = "success") {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `flex items-center gap-2.5 px-4 py-3 bg-slate-900 border text-white rounded-xl shadow-2xl transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto max-w-sm`;
+      
+      let icon = "info";
+      let borderClass = "border-slate-800";
+      if (type === "success") {
+        icon = "check-circle";
+        borderClass = "border-emerald-500/30 text-emerald-400";
+      } else if (type === "error") {
+        icon = "alert-circle";
+        borderClass = "border-rose-500/30 text-rose-400";
+      } else if (type === "info") {
+        icon = "sparkles";
+        borderClass = "border-blue-500/30 text-blue-400";
+      }
+
+      toast.innerHTML = `
+        <i data-lucide="${icon}" class="w-4 h-4 shrink-0"></i>
+        <span class="text-xs font-semibold text-slate-100 font-sans">${message}</span>
+      `;
+      toast.classList.add(...borderClass.split(' '));
+
+      container.appendChild(toast);
+      try {
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+          lucide.createIcons();
+        }
+      } catch (err) {
+        console.warn("Lucide icons rendering failed inside toast:", err);
+      }
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 50);
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 3000);
+    }
+
+    // Live tracker gps maps simulation
+    let trackerTimer = null;
+    function triggerLiveTracking() {
+      document.getElementById('tracker-modal').classList.remove('hidden');
+      
+      const rider = document.getElementById('tracker-rider');
+      rider.style.left = '10%';
+      rider.style.top = '70%';
+
+      const stepPack = document.getElementById('step-pack-bullet');
+      const stepTransit = document.getElementById('step-transit-bullet');
+      stepPack.className = "absolute -left-[23px] w-4 h-4 rounded-full flex items-center justify-center border text-[9px] font-bold bg-slate-900 border-slate-700 text-slate-400";
+      stepTransit.className = "absolute -left-[23px] w-4 h-4 rounded-full flex items-center justify-center border text-[9px] font-bold bg-slate-900 border-slate-700 text-slate-400";
+      stepPack.innerText = "2";
+      stepTransit.innerText = "3";
+
+      let time = 719;
+      if (trackerTimer) clearInterval(trackerTimer);
+      trackerTimer = setInterval(() => {
+        if (time <= 0) {
+          clearInterval(trackerTimer);
+          return;
+        }
+        time--;
+        const mins = Math.floor(time / 60);
+        const secs = time % 60;
+        document.getElementById('tracker-timer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      }, 1000);
+
+      // Animate steps
+      setTimeout(() => {
+        stepPack.className = "absolute -left-[23px] w-4 h-4 rounded-full flex items-center justify-center border text-[9px] font-bold bg-emerald-500 border-emerald-500 text-slate-900";
+        stepPack.innerText = "✓";
+        rider.style.left = '45%';
+        rider.style.top = '35%';
+      }, 3000);
+
+      setTimeout(() => {
+        stepTransit.className = "absolute -left-[23px] w-4 h-4 rounded-full flex items-center justify-center border text-[9px] font-bold bg-emerald-500 border-emerald-500 text-slate-900";
+        stepTransit.innerText = "✓";
+        rider.style.left = '90%';
+        rider.style.top = '25%';
+      }, 6000);
+    }
+
+    function toggleTracker(show) {
+      const modal = document.getElementById('tracker-modal');
+      if (show) modal.classList.remove('hidden');
+      else modal.classList.add('hidden');
+    }
+
+    // 🔑 Gemini API Settings Modal & Fetch functions
+    function openApiKeyModal() {
+      document.getElementById('api-key-modal').classList.remove('hidden');
+      const key = localStorage.getItem('gemini_api_key') || '';
+      document.getElementById('gemini-api-key-input').value = key;
+    }
+
+    function closeApiKeyModal() {
+      document.getElementById('api-key-modal').classList.add('hidden');
+    }
+
+    function saveApiKey() {
+      const key = document.getElementById('gemini-api-key-input').value.trim();
+      if (key) {
+        localStorage.setItem('gemini_api_key', key);
+        showToast("🔑 Gemini API key saved!", "success");
+        updateGeminiBadge();
+      } else {
+        clearApiKey();
+      }
+      closeApiKeyModal();
+    }
+
+    function clearApiKey() {
+      localStorage.removeItem('gemini_api_key');
+      document.getElementById('gemini-api-key-input').value = '';
+      showToast("🗑️ Gemini API key cleared.", "info");
+      updateGeminiBadge();
+    }
+
+    function updateGeminiBadge() {
+      const badge = document.getElementById('gemini-status-text');
+      if (!badge) return;
+      const key = localStorage.getItem('gemini_api_key') || "AIzaSyD8AZUAu1nWhaTlP15SGSNBjjX77VuRAGY";
+      if (key) {
+        badge.innerText = "Gemini AI: Live API Active";
+        badge.parentElement.classList.add('border-emerald-500/40', 'text-emerald-400');
+        badge.parentElement.classList.remove('text-amazon-orange');
+      } else {
+        badge.innerText = "Configure Gemini API";
+        badge.parentElement.classList.remove('border-emerald-500/40', 'text-emerald-400');
+        badge.parentElement.classList.add('text-amazon-orange');
+      }
+    }
+
+    async function fetchGeminiIntent(userInput, budgetVal = "") {
+      const customKey = localStorage.getItem('gemini_api_key');
+      
+      // If a custom key is explicitly set in settings, fetch directly client-side
+      if (customKey) {
+        return fetchGeminiDirect(userInput, budgetVal, customKey);
+      }
+
+      // Otherwise, query the local secure backend proxy server
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 seconds proxy timeout
+
+      try {
+        const response = await fetch('/api/intent', {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ userInput, budgetVal }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error("Proxy error status " + response.status);
+        }
+
+        const data = await response.json();
+        return data;
+
+      } catch (err) {
+        clearTimeout(timeoutId);
+        console.warn("[FRONTEND] Proxy call failed, falling back to direct client-side calling:", err);
+        
+        // Fallback: fetch directly client-side using default key if proxy fails or is unavailable
+        const defaultKey = "AIzaSyD8AZUAu1nWhaTlP15SGSNBjjX77VuRAGY";
+        return fetchGeminiDirect(userInput, budgetVal, defaultKey);
+      }
+    }
+
+    async function fetchGeminiDirect(userInput, budgetVal, apiKey) {
+      if (!apiKey) return null;
+
+      const systemPrompt = `You are IntentCart's expert AI shopping assistant for the Indian market. Your role is to deeply understand the user's shopping intent — their life situation, event, or goal — and generate a highly personalised, realistic, and genuinely useful cart recommendation.
+
+You MUST return ONLY a valid JSON object. No markdown, no code fences, no explanation — raw JSON only.
+
+OUTPUT SCHEMA (strictly follow this):
+{
+  "label": "A specific, human-friendly name for this intent (e.g. 'Weekend Trek to Kedarkantha' not just 'Trekking')",
+  "confidence": "High",
+  "essentialsTotal": <sum of all essential item prices as integer>,
+  "allTotal": <sum of ALL item prices as integer>,
+  "budgetPct": <percentage of budget used as integer, or 0 if no budget given>,
+  "hiddenNeeds": ["3 to 5 items the user probably forgot but will desperately need — be specific and witty"],
+  "essentials": [
+    {
+      "id": "e-1",
+      "name": "Full specific product name with variant (e.g. Wildcraft Daypack 30L Hiking Backpack)",
+      "price": <realistic Indian market price in INR as integer>,
+      "rating": <realistic rating like 4.3 or 4.6 — never round numbers>,
+      "reviews": <realistic review count like 2847 — not round numbers>,
+      "brand": "Real brand name (e.g. Wildcraft, Decathlon, Himalayan Salt, boAt, etc.)",
+      "why": "1-2 sentence personal AI justification directly tied to the user's specific intent — explain WHY this specific item matters for THEIR situation",
+      "desc": "Short product description with key specs/features relevant to the intent",
+      "img": "<most relevant URL from the approved list below>"
+    }
+  ],
+  "niceToHave": [
+    {
+      "id": "n-1",
+      "name": "Full specific product name",
+      "price": <realistic INR price as integer>,
+      "rating": <realistic rating>,
+      "reviews": <realistic review count>,
+      "brand": "Real brand name",
+      "why": "Personal justification for why this would enhance their experience",
+      "desc": "Short description with key features",
+      "img": "<most relevant URL from the approved list below>"
+    }
+  ]
+}
+
+QUALITY RULES — follow strictly:
+1. QUANTITY: Always generate 5-7 essentials and 3-5 niceToHave items. Never fewer.
+2. SPECIFICITY: Use real product names with model/variant details. Never generic names like "Water Bottle" — say "Milton Thermosteel Flip Lid 750ml Flask" instead.
+3. BRANDS: Use real Indian market brands. Examples: boAt, Noise, Wildcraft, Decathlon, Himalaya, Dabur, Mamaearth, Asian Paints, Prestige, Pigeon, Bajaj, VIP, American Tourister, Classmate, Camlin, Staedtler, Dettol, Savlon, Fevicol, Godrej, etc.
+4. PRICES: Use realistic Indian e-commerce prices (₹150–₹8000 range for most items). Make them believable — not too round (₹499 not ₹500).
+5. RATINGS: Use realistic values like 4.2, 4.5, 4.7 — never 5.0 or 3.0 or round numbers.
+6. REVIEWS: Use believable counts like 1243, 3891, 847 — not round thousands.
+7. WHY field: This is the most important field. Write it as a personal AI advisor speaking directly to the user about their specific situation. Example: "Since you're trekking to altitudes above 3000m, dehydration hits fast — this insulated flask keeps water cold for 24hrs and fits standard pack pockets."
+8. HIDDEN NEEDS: Be insightful and slightly witty — surface the things people always forget. E.g. for hostel move-in: "Cockroach spray — hostel kitchens are... lively."
+9. BUDGET: If a budget is specified, keep essentialsTotal comfortably under it. Spread niceToHave items across a realistic range.
+10. CONTEXT SENSITIVITY: Infer the full context. "Moving into a hostel" implies student, shared bathroom, limited storage. "Job interview prep" implies professional appearance, commuting, stationery.
+
+APPROVED IMAGE URLs — you MUST pick the single most visually accurate URL for each specific product. Match as precisely as possible:
+
+== CLOTHING & FOOTWEAR ==
+- Shirt/T-shirt/Top/Formal wear: https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80
+- Jacket/Windcheater/Raincoat/Hoodie: https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=400&q=80
+- Trekking/Sports shoes/Hiking boots/Sneakers: https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=400&q=80
+- Formal shoes/Leather shoes/Loafers: https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=400&q=80
+- Socks/Gloves/Cap/Hat/Beanie: https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?auto=format&fit=crop&w=400&q=80
+- Sunglasses/Eyewear: https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=400&q=80
+
+== BAGS & LUGGAGE ==
+- Backpack/Rucksack/Hiking pack: https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=400&q=80
+- Laptop bag/Office bag/Briefcase: https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=400&q=80
+- Suitcase/Trolley bag/Luggage: https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?auto=format&fit=crop&w=400&q=80
+- Wallet/Cardholder/Purse: https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=400&q=80
+
+== ELECTRONICS & TECH ==
+- Headphones/Over-ear headphones: https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80
+- Earphones/TWS earbuds/In-ear: https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=400&q=80
+- Laptop/MacBook/Notebook computer: https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=400&q=80
+- Smartphone/Mobile phone: https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80
+- Power bank/Portable charger: https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=400&q=80
+- Charger/Cable/Adapter/USB hub: https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=400&q=80
+- Camera/DSLR/Action cam/GoPro: https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=400&q=80
+- Smart watch/Fitness band: https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80
+
+== OUTDOOR & CAMPING ==
+- Tent/Camping tent: https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80
+- Sleeping bag/Camping mat: https://images.unsplash.com/photo-1445308394109-4ec2920981b1?auto=format&fit=crop&w=400&q=80
+- Trekking pole/Walking stick: https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=400&q=80
+- Water bottle/Flask/Sipper/Thermos: https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=400&q=80
+- Torch/Headlamp/Flashlight: https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=80
+- Sunscreen/Insect repellent/Lip balm: https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=400&q=80
+
+== FOOD & KITCHEN ==
+- Groceries/Food items/Ingredients: https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80
+- Snacks/Chips/Party food/Beverages: https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=400&q=80
+- Kitchen appliances/Cookware/Utensils: https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=400&q=80
+- Instant noodles/Ready-to-eat/Energy bars: https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?auto=format&fit=crop&w=400&q=80
+
+== HEALTH & PERSONAL CARE ==
+- Medicine/Tablets/First aid kit: https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80
+- Face wash/Moisturizer/Skincare: https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=400&q=80
+- Shampoo/Hair care/Conditioner: https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=400&q=80
+- Toothbrush/Toothpaste/Oral care: https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&w=400&q=80
+- Protein powder/Supplements/Gym nutrition: https://images.unsplash.com/photo-1593095948071-474c5cc2989d?auto=format&fit=crop&w=400&q=80
+- Yoga mat/Exercise mat/Gym mat: https://images.unsplash.com/photo-1601925228843-a1f7021ccba4?auto=format&fit=crop&w=400&q=80
+
+== HOME & OFFICE ==
+- Notebook/Diary/Journal/Planner: https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=400&q=80
+- Pen/Pencil/Stationery/Art supplies: https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=400&q=80
+- Books/Textbooks/Study material: https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80
+- Pillow/Bedding/Blanket/Mattress: https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=400&q=80
+- Lock/Padlock/Security/Locker: https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=400&q=80
+- Laundry/Detergent/Cleaning supplies: https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=400&q=80
+- Umbrella/Rainwear: https://images.unsplash.com/photo-1572459377433-a6c4cd1b1b07?auto=format&fit=crop&w=400&q=80
+- Board games/Cards/Indoor games: https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=400&q=80`;
+
+      const userPrompt = `Intent: "${userInput}"${budgetVal ? `\nBudget Limit: ₹${budgetVal}` : ""}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 seconds direct timeout
+
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  { text: systemPrompt },
+                  { text: userPrompt }
+                ]
+              }
+            ],
+            generationConfig: {
+              responseMimeType: "application/json",
+              thinkingConfig: { thinkingBudget: 0 }
+            }
+          }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error("HTTP error " + response.status);
+        }
+
+        const data = await response.json();
+        const text = data.candidates[0].content.parts[0].text;
+        const parsed = JSON.parse(text.trim());
+        return parsed;
+
+      } catch (err) {
+        clearTimeout(timeoutId);
+        console.error("[FRONTEND] Gemini Direct API call failed:", err);
+        return null;
+      }
+    }
+  </script>
+</body>
+</html>
