@@ -2179,7 +2179,13 @@
 
       recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
-        showToast("❌ Speech recognition error: " + event.error, "error");
+        if (event.error === 'not-allowed') {
+          showToast("🔒 Mic blocked! Click the Lock 🔒 icon in the address bar, set Microphone to 'Allow', and reload.", "error");
+        } else if (event.error === 'network') {
+          showToast("🌐 Speech Network Error! Google/Apple speech servers are unreachable. Try mobile data or typing instead.", "error");
+        } else {
+          showToast("❌ Speech recognition error: " + event.error, "error");
+        }
       };
 
       recognition.onend = () => {
@@ -3083,7 +3089,13 @@ APPROVED IMAGE URLs:
 
       copilotRecognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
-        showToast("❌ Speech recognition error: " + event.error, "error");
+        if (event.error === 'not-allowed') {
+          showToast("🔒 Mic blocked! Click the Lock 🔒 icon in the address bar, set Microphone to 'Allow', and reload.", "error");
+        } else if (event.error === 'network') {
+          showToast("🌐 Speech Network Error! Google/Apple speech servers are unreachable. Try mobile data or typing instead.", "error");
+        } else {
+          showToast("❌ Speech recognition error: " + event.error, "error");
+        }
       };
 
       copilotRecognition.onend = () => {
