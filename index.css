@@ -1452,11 +1452,11 @@ h1, h2, h3, h4, h5, h6 {
 /* Floating Mic Orb Button */
 .copilot-orb {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 16px;
+  left: 16px;
   z-index: 40;
-  width: 60px;
-  height: 60px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: linear-gradient(135deg, #FF9900 0%, #E65C00 100%);
   box-shadow: 0 4px 20px rgba(255, 153, 0, 0.4);
@@ -1493,11 +1493,11 @@ h1, h2, h3, h4, h5, h6 {
 /* Glassmorphic Side/Floating Panel */
 .copilot-panel {
   position: fixed;
-  bottom: 96px;
-  right: 24px;
+  bottom: 80px;
+  left: 16px;
   z-index: 50;
-  width: 380px;
-  max-height: 520px;
+  width: 310px;
+  max-height: 440px;
   display: flex;
   flex-direction: column;
   background: rgba(18, 24, 36, 0.93);

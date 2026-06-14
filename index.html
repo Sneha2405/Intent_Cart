@@ -1233,7 +1233,7 @@
   <button 
     id="a11y-toggle-btn"
     onclick="toggleA11yPanelToggle()"
-    class="fixed bottom-6 left-6 z-50 bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95"
+    class="hidden fixed bottom-6 left-6 z-50 bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95"
     title="Accessibility Settings (SOS)"
   >
     <i data-lucide="accessibility" class="w-7 h-7"></i>
@@ -1277,13 +1277,14 @@
     id="copilot-orb-btn"
     onclick="toggleCopilotPanel()"
     class="copilot-orb"
+    style="left: 16px; right: auto; width: 52px; height: 52px; bottom: 16px;"
     title="Toggle AI Shopping Co-Pilot"
   >
     <i data-lucide="bot" class="w-6 h-6"></i>
   </button>
 
   <!-- Co-Pilot Slide-up Panel -->
-  <div id="copilot-sidebar" class="copilot-panel hidden text-left flex flex-col">
+  <div id="copilot-sidebar" class="copilot-panel hidden text-left flex flex-col" style="left: 16px; right: auto; width: 310px; max-height: 440px; bottom: 80px;">
     <!-- Header -->
     <div class="copilot-header">
       <div class="flex items-center gap-2">
@@ -3151,6 +3152,168 @@ APPROVED IMAGE URLs:
       sendVoiceCommandToAI(text);
     }
 
+    function parseCopilotCommandOffline(commandText, currentIntentProducts, cartItems) {
+      const text = commandText.toLowerCase();
+      const res = {
+        action: "UNKNOWN",
+        itemIdsToTarget: [],
+        alternatives: [],
+        speechResponse: "I understand you want to: " + commandText + ". (Offline fallback resolved action)"
+      };
+
+      const allProducts = [
+        ...(currentIntentProducts.essentials || []),
+        ...(currentIntentProducts.niceToHave || [])
+      ];
+
+      // 1. PROCEED_TO_CHECKOUT logic (checked first to prevent "buy" or "checkout" from triggering product additions)
+      if (text.includes("checkout") || text.includes("buy") || text.includes("pay") || text.includes("place order") || text.includes("purchase") || text.includes("order")) {
+        res.action = "PROCEED_TO_CHECKOUT";
+        res.speechResponse = "I've triggered the checkout panel. Please swipe the orange handle at the bottom right to place your order.";
+      }
+      // 2. CLEAR_CART logic
+      else if (text.includes("clear") || text.includes("empty") || text.includes("remove all")) {
+        res.action = "CLEAR_CART";
+        res.speechResponse = "I have cleared all items from your shopping cart.";
+      }
+      // 3. REMOVE_FROM_CART logic
+      else if (text.includes("remove") || text.includes("delete") || text.includes("discard") || text.includes("omit") || text.includes("clear item")) {
+        res.action = "REMOVE_FROM_CART";
+        const targets = [];
+        cartItems.forEach(item => {
+          const itemName = item.name ? item.name.toLowerCase() : (item.title ? item.title.toLowerCase() : "");
+          const words = text.split(/\s+/);
+          const isMatch = words.some(w => {
+            if (w.length < 3) return false;
+            if (["the", "and", "cart", "from", "remove", "delete"].includes(w)) return false;
+            return itemName.includes(w);
+          });
+          if (isMatch) {
+            targets.push(item.id || item.title);
+          }
+        });
+
+        if (targets.length > 0) {
+          res.itemIdsToTarget = targets;
+          res.speechResponse = "Removed matching items from your cart.";
+        } else {
+          res.speechResponse = "I couldn't find that item in your cart to remove.";
+        }
+      }
+      else if (text.includes("add") || text.includes("put") || text.includes("want") || text.includes("insert") || text.includes("need") || text.includes("include")) {
+        res.action = "ADD_TO_CART";
+        const targets = [];
+        
+        // Helper matcher function
+        const matchesProduct = (prod) => {
+          const prodName = prod.name.toLowerCase();
+          const prodBrand = prod.brand.toLowerCase();
+          const words = text.split(/\s+/);
+          return words.some(w => {
+            if (w.length < 3) return false;
+            if (["the", "and", "cart", "with", "for", "add", "put", "into", "this"].includes(w)) return false;
+            
+            // Substring checks
+            if (prodName.includes(w) || prodBrand.includes(w)) return true;
+            
+            // Fuzzy prefix variations (e.g. "ballons" -> "ballo")
+            if (w.length >= 5) {
+              const prefix4 = w.substring(0, 4);
+              const prefix5 = w.substring(0, 5);
+              if (prodName.includes(prefix5) || prodName.includes(prefix4)) return true;
+            }
+            return false;
+          });
+        };
+
+        // 1. Search current intent recommendations first
+        allProducts.forEach(prod => {
+          if (matchesProduct(prod)) {
+            targets.push(prod.id);
+          }
+        });
+
+        // 2. Fallback: Search all categories globally
+        if (targets.length === 0) {
+          Object.keys(INTENT_DATABASE).forEach(cat => {
+            const catData = INTENT_DATABASE[cat];
+            const catProducts = [...(catData.essentials || []), ...(catData.niceToHave || [])];
+            catProducts.forEach(prod => {
+              if (matchesProduct(prod) && !targets.includes(prod.id)) {
+                targets.push(prod.id);
+                // Dynamically inject into current intent list so it renders in the UI
+                if (!currentIntentProducts.niceToHave.some(p => p.id === prod.id) && !currentIntentProducts.essentials.some(p => p.id === prod.id)) {
+                  currentIntentProducts.niceToHave.push(prod);
+                }
+              }
+            });
+          });
+        }
+
+        // Specific pasta/sauce/spaghetti overrides
+        if (targets.length === 0 && (text.includes("pasta") || text.includes("spaghetti"))) {
+          const pastaProd = [...allProducts, ...Object.values(INTENT_DATABASE).flatMap(db => [...(db.essentials || []), ...(db.niceToHave || [])])]
+            .find(p => p.id.includes("spag") || p.name.toLowerCase().includes("spaghetti"));
+          if (pastaProd) {
+            targets.push(pastaProd.id);
+            if (!currentIntentProducts.niceToHave.some(p => p.id === pastaProd.id) && !currentIntentProducts.essentials.some(p => p.id === pastaProd.id)) {
+              currentIntentProducts.niceToHave.push(pastaProd);
+            }
+          }
+        }
+
+        if (targets.length > 0) {
+          res.itemIdsToTarget = targets;
+          const names = targets.map(tid => {
+            // Check current intent first
+            let p = allProducts.find(prod => prod.id === tid);
+            if (!p) {
+              // Check global database if injected
+              Object.keys(INTENT_DATABASE).forEach(cat => {
+                const found = [...(INTENT_DATABASE[cat].essentials || []), ...(INTENT_DATABASE[cat].niceToHave || [])].find(prod => prod.id === tid);
+                if (found) p = found;
+              });
+            }
+            return p ? p.name : tid;
+          }).join(", ");
+          res.speechResponse = "Added " + names + " to your shopping cart!";
+        } else {
+          // Extract what they wanted to add
+          let targetObject = "that item";
+          const addKeywords = ["add", "put", "buy", "want", "insert", "need", "include"];
+          let words = text.split(/\s+/);
+          let keyIdx = words.findIndex(w => addKeywords.includes(w));
+          if (keyIdx !== -1 && keyIdx < words.length - 1) {
+            let targetWords = words.slice(keyIdx + 1).filter(w => !["the", "a", "an", "to", "into", "cart", "some", "my"].includes(w));
+            if (targetWords.length > 0) {
+              targetObject = targetWords.join(" ");
+            }
+          }
+          res.speechResponse = "I couldn't find '" + targetObject + "' on the screen or in our store database. Try checking your spelling or searching for it above!";
+        }
+      }
+      // 5. RECOMMEND_ALTERNATIVES logic
+      else if (text.includes("suggest") || text.includes("recommend") || text.includes("alternative") || text.includes("else")) {
+        res.action = "RECOMMEND_ALTERNATIVES";
+        res.speechResponse = "Here are some alternative suggestions you might like:";
+        res.alternatives = [
+          {
+            id: "alt-off-1",
+            name: "Eco-Friendly Organic Alternative",
+            price: 299,
+            rating: 4.7,
+            reviews: 420,
+            brand: "OrganicIndia",
+            why: "A premium sustainable alternative option.",
+            desc: "All-natural certified quality.",
+            img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80"
+          }
+        ];
+      }
+
+      return res;
+    }
+
     async function sendVoiceCommandToAI(commandText) {
       const currentIntentProducts = INTENT_DATABASE[currentIntent] || { essentials: [], niceToHave: [] };
       const customKey = localStorage.getItem('gemini_api_key');
@@ -3180,7 +3343,11 @@ APPROVED IMAGE URLs:
         // Fallback to client-side direct
         if (!responseData) {
           const defaultKey = "AIzaSyD8AZUAu1nWhaTlP15SGSNBjjX77VuRAGY";
-          responseData = await fetchCopilotCommandDirect(commandText, currentIntentProducts, activeCart, defaultKey);
+          try {
+            responseData = await fetchCopilotCommandDirect(commandText, currentIntentProducts, activeCart, defaultKey);
+          } catch (err) {
+            console.warn("Direct default-key call failed:", err);
+          }
         }
       }
 
@@ -3191,9 +3358,8 @@ APPROVED IMAGE URLs:
       }
 
       if (!responseData) {
-        addMessageToCopilotTranscript('assistant', "⚠️ Sorry, I encountered an error. Please check your network or API settings.");
-        speakText("Sorry, I encountered an error.");
-        return;
+        console.warn("[FRONTEND] API parsing failed. Falling back to local offline parser.");
+        responseData = parseCopilotCommandOffline(commandText, currentIntentProducts, activeCart);
       }
 
       addMessageToCopilotTranscript('assistant', responseData.speechResponse, responseData);
